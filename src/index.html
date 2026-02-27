@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NotiyBot Dashboard</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        html, body { background: transparent !important; margin: 0; padding: 0; overflow: hidden; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: none; }
+        .toast-enter { transform: translateX(120%); opacity: 0; }
+        .toast-leave { transform: translateX(120%); opacity: 0; }
+        input[type="number"]::-webkit-inner-spin-button, 
+        input[type="number"]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+    </style>
+</head>
+
+<body class="bg-transparent text-white h-screen w-screen overflow-hidden flex p-1 font-sans select-none relative">
+
+    <div class="flex-1 bg-[#18181b] w-full h-full rounded-[20px] border border-[#3f3f46] overflow-hidden flex flex-col relative shadow-2xl z-10">
+
+        <div class="h-12 w-full flex items-center justify-start px-5 gap-2" style="-webkit-app-region: drag;">
+            <div class="flex gap-2 group" style="-webkit-app-region: no-drag;">
+                <button id="btn-min" class="w-3 h-3 rounded-full bg-[#ffbd2e] hover:bg-yellow-500 focus:outline-none border border-black/10"></button>
+                <button id="btn-max" class="w-3 h-3 rounded-full bg-[#27c93f] hover:bg-green-500 focus:outline-none border border-black/10"></button>
+                <button id="btn-close" class="w-3 h-3 rounded-full bg-[#ff5f56] hover:bg-red-500 focus:outline-none border border-black/10"></button>
+            </div>
+        </div>
+
+        <div id="main-content" class="flex-1 overflow-y-auto px-8 pb-28 relative">
+            </div>
+
+        <nav class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-[#27272a]/90 backdrop-blur-md px-2 py-2 rounded-full shadow-2xl border border-[#3f3f46] flex gap-2 items-center z-50">
+            <button id="nav-home" onclick="switchTab('home')" class="nav-btn flex items-center justify-center w-12 h-10 rounded-full bg-[#3f3f46] text-white transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg></button>
+            <button id="nav-settings" onclick="switchTab('settings')" class="nav-btn flex items-center justify-center w-12 h-10 rounded-full text-gray-400 hover:text-white transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg></button>
+            <button id="nav-timer" onclick="switchTab('timer')" class="nav-btn flex items-center justify-center w-12 h-10 rounded-full text-gray-400 hover:text-white transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></button>
+        </nav>
+    </div> 
+
+    <div id="toast-container" class="fixed top-8 right-8 z-[100] flex flex-col gap-3 pointer-events-none"></div>
+
+    <div id="modal-create" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-6 opacity-0 pointer-events-none transition-all duration-300">
+        <div class="bg-[#18181b] border border-[#3f3f46] w-full max-w-sm rounded-[20px] overflow-hidden shadow-2xl p-7 transform scale-95 transition-transform duration-300 relative" id="modal-content">
+            <h2 class="text-xl font-bold mb-6 text-white flex items-center gap-3">
+                <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                Buat Pengingat
+            </h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-sm font-medium text-gray-400 mb-1.5 block">Teks Notifikasi</label>
+                    <input type="text" id="new-mode-name" placeholder="Contoh: Waktunya Tidur" class="w-full bg-[#27272a] border border-[#3f3f46] rounded-[14px] px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition placeholder-gray-600">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-400 mb-1.5 block">Tipe Waktu</label>
+                    <select id="new-mode-type" onchange="toggleTimeInput()" class="w-full bg-[#27272a] border border-[#3f3f46] rounded-[14px] px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition appearance-none cursor-pointer">
+                        <option value="interval">Berulang (Menit)</option>
+                        <option value="time">Spesifik Jam (Jam:Menit)</option>
+                    </select>
+                </div>
+                <div id="input-group-interval">
+                    <label class="text-sm font-medium text-gray-400 mb-1.5 block">Muncul Setiap (Menit)</label>
+                    <input type="number" id="new-mode-interval" placeholder="Contoh: 60" class="w-full bg-[#27272a] border border-[#3f3f46] rounded-[14px] px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition placeholder-gray-600">
+                </div>
+                <div id="input-group-time" class="hidden">
+                    <label class="text-sm font-medium text-gray-400 mb-1.5 block">Pilih Jam (WIB)</label>
+                    <input type="time" id="new-mode-time" class="w-full bg-[#27272a] border border-[#3f3f46] rounded-[14px] px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition cursor-pointer" style="color-scheme: dark;">
+                </div>
+                <div class="flex gap-4">
+                    <div class="flex-1">
+                        <label class="text-sm font-medium text-gray-400 mb-1.5 block">Pilih Ikon</label>
+                        <select id="new-mode-icon" class="w-full bg-[#27272a] border border-[#3f3f46] rounded-[14px] px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition appearance-none cursor-pointer">
+                            <option value="bell">Lonceng</option>
+                            <option value="moon">Tidur / Istirahat</option>
+                            <option value="coffee">Makan / Minum</option>
+                            <option value="code">Fokus / Bekerja</option>
+                            <option value="game">Hiburan / Bermain</option>
+                        </select>
+                    </div>
+                    <div class="w-16 flex flex-col items-center">
+                        <label class="text-sm font-medium text-gray-400 mb-1.5 block">Warna</label>
+                        <div class="w-[46px] h-[46px] rounded-full overflow-hidden border-2 border-[#3f3f46] hover:border-blue-500 transition relative cursor-pointer flex-shrink-0 bg-[#27272a]">
+                            <input type="color" id="new-mode-color" value="#3b82f6" class="absolute -top-4 -left-4 w-20 h-20 cursor-pointer p-0 m-0 border-0 outline-none">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-8">
+                <button onclick="closeModal()" class="flex-1 bg-[#27272a] border border-[#3f3f46] hover:bg-[#3f3f46] text-white py-3 rounded-[14px] transition font-medium">Batal</button>
+                <button onclick="submitNewMode()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-[14px] transition font-medium shadow-lg shadow-blue-500/30">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-confirm" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-6 opacity-0 pointer-events-none transition-all duration-300">
+        <div class="bg-[#18181b] border border-[#3f3f46] w-full max-w-xs rounded-[20px] shadow-2xl p-6 transform scale-95 transition-transform duration-300 text-center" id="confirm-content">
+            <div id="confirm-icon-container" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"></div>
+            <h3 class="text-xl font-bold text-white mb-2" id="confirm-title">Konfirmasi</h3>
+            <p class="text-gray-400 text-sm mb-6" id="confirm-text">Apakah Anda yakin?</p>
+            <div class="flex gap-3">
+                <button onclick="closeConfirm()" class="flex-1 bg-[#27272a] border border-[#3f3f46] hover:bg-[#3f3f46] text-white py-3 rounded-[14px] transition font-medium">Batal</button>
+                <button id="btn-confirm-yes" class="flex-1 text-white py-3 rounded-[14px] transition font-medium shadow-lg">Ya</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/renderer.js"></script>
+</body>
+</html>
