@@ -72,3 +72,12 @@ npm install
 
 # 3. Jalankan Aplikasi
 npm start
+```
+
+---
+
+## Dukung Proyek Ini (Support & Donation)
+
+Proyek ini 100% Open Source. Jika aplikasi ini membantu meningkatkan produktivitas Anda, Anda bisa mendukung pengembangan fitur selanjutnya (To-Do List, AI Think, Habit Tracker) dengan mentraktir saya kopi:
+
+[teer.id/BagusSetiawan90](https://teer.id/BagusSetiawan90)
