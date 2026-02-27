@@ -11,34 +11,34 @@ Dibangun menggunakan teknologi **Electron.js** dan **Tailwind CSS**, sistem ini 
 
 ---
 
-## 🔥 Fitur Utama & Modul
+## Fitur Utama & Modul
 
 Aplikasi ini mencakup berbagai modul produktivitas yang terintegrasi:
 
-### 1. ⏱️ Pomodoro Timer & Deep Work
+### 1. Pomodoro Timer & Deep Work
 - **Sesi Fokus:** Manajemen waktu kerja (25 menit fokus, 5 menit istirahat).
 - **Interactive UI:** Progress bar melingkar, tombol Play/Pause/Reset yang mulus.
 - **Smart Notification:** Pop-up otomatis saat sesi fokus atau istirahat berakhir.
 
-### 2. 💧 Pelacak Kesehatan (Health Tracker)
+### 2. Pelacak Kesehatan (Health Tracker)
 - **Water Tracker:** Catat target 8 gelas air harian secara manual dengan tombol interaktif.
 - **Stretch Reminder:** Pengingat otomatis untuk berdiri dan meregangkan badan setelah duduk terlalu lama.
 
-### 3. 🔔 Pengingat Kustom (Custom Alarms)
+### 3. Pengingat Kustom (Custom Alarms)
 - **Mode Interval:** Notifikasi yang muncul berulang setiap beberapa menit (misal: tiap 60 menit).
 - **Mode Waktu Spesifik:** Alarm yang berbunyi tepat pada jam tertentu (misal: 22:00 WIB untuk waktu tidur).
 - **Personalisasi:** Pilih ikon (Heroicons) dan warna *badge* untuk setiap pengingat.
 
-### 4. 🔕 Mode Senyap (Do Not Disturb)
+### 4. Mode Senyap (Do Not Disturb)
 - **Quick Toggle:** Tombol *switch* ala iOS untuk menahan semua pop-up notifikasi saat Anda sedang *meeting* atau butuh fokus penuh, tanpa menghapus pengaturan timer.
 
-### 5. 🎨 Personalisasi Animasi (Face Customization)
+### 5. Personalisasi Animasi (Face Customization)
 - **Ubah Wajah Notifikasi:** Ganti animasi pop-up *default* dengan gambar, GIF, atau SVG milik Anda sendiri.
 - **Reset Instan:** Kembalikan animasi ke versi Tabbie CSS *original* hanya dengan satu klik.
 
 ---
 
-## 🛠️ Teknologi (Tech Stack)
+## Teknologi (Tech Stack)
 
 * **Core Framework:** Electron.js
 * **Frontend:** HTML5, CSS3, Vanilla JavaScript
@@ -48,7 +48,7 @@ Aplikasi ini mencakup berbagai modul produktivitas yang terintegrasi:
 
 ---
 
-## 💻 Persyaratan Sistem (Requirements)
+## Persyaratan Sistem (Requirements)
 
 Pastikan komputer Anda memenuhi spesifikasi berikut:
 * OS: Windows 10/11, macOS, atau Linux
@@ -57,7 +57,7 @@ Pastikan komputer Anda memenuhi spesifikasi berikut:
 
 ---
 
-## ⚡ Panduan Instalasi (Quick Start)
+## Panduan Instalasi (Quick Start)
 
 Salin dan jalankan perintah berikut di terminal Anda secara berurutan untuk menjalankan proyek ini di komputer lokal:
 
