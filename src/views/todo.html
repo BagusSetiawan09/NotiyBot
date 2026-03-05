@@ -33,6 +33,20 @@
         
         <textarea id="task-desc" rows="2" placeholder="Deskripsi detail tentang task ini..." class="w-full bg-[#18181b] border border-[#3f3f46] rounded-lg py-2.5 px-4 text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 outline-none mb-4 resize-none placeholder-gray-600 transition"></textarea>
 
+        <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 block ml-1">Waktu Mulai</label>
+                <input type="datetime-local" id="task-start" class="w-full bg-[#18181b] border border-[#3f3f46] rounded-lg px-4 py-2 text-sm text-gray-300 focus:outline-none focus:border-blue-500 transition cursor-pointer" style="color-scheme: dark;">
+            </div>
+            <div>
+                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 flex items-center gap-1 ml-1">
+                    <svg class="w-3 h-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Tenggat (Deadline)
+                </label>
+                <input type="datetime-local" id="task-deadline" class="w-full bg-[#18181b] border border-[#3f3f46] rounded-lg px-4 py-2 text-sm text-gray-300 focus:outline-none focus:border-red-500 transition cursor-pointer" style="color-scheme: dark;">
+            </div>
+        </div>
+
         <div class="flex items-center justify-between">
             <div class="flex gap-3 items-center">
                 <div class="relative">
@@ -68,7 +82,11 @@
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
         
-        <div class="mb-4" id="detail-priority-badge"></div>
+        <div class="mb-4 flex items-center gap-2" id="detail-badge-container">
+            <div id="detail-priority-badge"></div>
+            <div id="detail-deadline-badge"></div>
+        </div>
+        
         <h2 id="detail-title" class="text-xl font-bold text-white mb-5 leading-snug">Judul Task</h2>
         
         <div class="bg-[#242427] border border-[#3f3f46] rounded-xl p-4 mb-4">

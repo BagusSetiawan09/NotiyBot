@@ -1,13 +1,10 @@
-// const fs = require('fs');
-// const { ipcRenderer } = require('electron');
-
-// VARIABLES AI & CHAT
+// Variable Declarations
 window.currentSelectedAiModel = 'gemini-2.5-flash';
 window.currentAiMode = 'cepat'; 
-window.currentAiFile = null; 
+window.currentAiAttachment = null; 
 window.currentAiAbortController = null;
 
-// API KEY MODAL
+// API Key Management
 window.openApiModal = function() {
     document.getElementById('input-api-key').value = localStorage.getItem('gemini_api_key') || "";
     document.getElementById('modal-api-key').classList.remove('opacity-0', 'pointer-events-none');
@@ -23,17 +20,18 @@ window.saveApiKey = function() {
     const key = document.getElementById('input-api-key').value.trim();
     if(key) {
         localStorage.setItem('gemini_api_key', key);
-        if(window.showToast) window.showToast("API Key berhasil disimpan!", "success");
+        if(window.showToast) window.showToast("API Key successfully secured in local storage.", "success");
         window.closeApiModal();
     } else {
-        if(window.showToast) window.showToast("Kunci API tidak boleh kosong!", "error");
+        if(window.showToast) window.showToast("API Key cannot be empty.", "error");
     }
 }
 
-// SESSION MANAGEMENT
+// Session & History Management
 window.chatSessions = JSON.parse(localStorage.getItem('notiybot_chat_sessions')) || [];
 window.activeSessionId = localStorage.getItem('notiybot_active_session') || null;
 
+// Legacy code migration handler
 let oldChatHistory = JSON.parse(localStorage.getItem('notiybot_chats'));
 if (oldChatHistory && oldChatHistory.length > 0 && window.chatSessions.length === 0) {
     let newSession = { id: 'session_' + Date.now(), title: 'Obrolan Lama', messages: oldChatHistory };
@@ -42,7 +40,7 @@ if (oldChatHistory && oldChatHistory.length > 0 && window.chatSessions.length ==
     localStorage.removeItem('notiybot_chats'); 
 }
 
-// AUTO-RENAME REPAIR
+// Auto-Rename Engine for un-titled sessions
 let needsSave = false;
 window.chatSessions.forEach(session => {
     if ((session.title === 'Obrolan Lama' || session.title === 'Obrolan Baru') && session.messages.length > 0) {
@@ -58,6 +56,7 @@ window.chatSessions.forEach(session => {
     }
 });
 
+// Initialize default session state
 if(window.chatSessions.length === 0) {
     let newSession = { id: 'session_' + Date.now(), title: 'Obrolan Baru', messages: [] };
     window.chatSessions.unshift(newSession);
@@ -79,7 +78,7 @@ window.getActiveSession = function() {
     return window.chatSessions.find(s => s.id === window.activeSessionId) || window.chatSessions[0];
 }
 
-// HISTORY DRAWER
+// UI Controllers for History Drawer
 window.toggleChatHistory = function() {
     const drawer = document.getElementById('drawer-chat-history');
     const backdrop = document.getElementById('drawer-backdrop');
@@ -154,7 +153,60 @@ window.deleteChat = function(id, event) {
     if(window.showToast) window.showToast("Riwayat Chat Dihapus", "success");
 }
 
-// UI CONTROLS
+// File and Attachment Management
+window.handleAiFileSelect = function(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    let ext = file.name.split('.').pop().toLowerCase();
+    let allowed = ['png', 'jpg', 'jpeg', 'webp', 'pdf'];
+    
+    if(!allowed.includes(ext)) { 
+        if(window.showToast) window.showToast("Format tidak didukung. Harap gunakan Gambar atau PDF.", "error"); 
+        input.value = ""; 
+        return; 
+    }
+
+    // File size validation (Max 5MB limit to optimize API latency)
+    if (file.size > 5 * 1024 * 1024) {
+        if(window.showToast) window.showToast("Ukuran file melebihi batas maksimal 5MB.", "warning");
+        input.value = "";
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        // Extract raw Base64 data by stripping the Data URL prefix
+        const base64Data = e.target.result.split(',')[1]; 
+        
+        window.currentAiAttachment = {
+            name: file.name,
+            mimeType: file.type,
+            data: base64Data
+        };
+
+        // Update UI to display attachment preview
+        const previewEl = document.getElementById('ai-attachment-preview');
+        const nameEl = document.getElementById('ai-attachment-name');
+        
+        if (previewEl && nameEl) {
+            previewEl.classList.remove('hidden');
+            nameEl.innerText = file.name;
+        }
+    };
+    reader.readAsDataURL(file);
+};
+
+window.removeAiAttachment = function() {
+    window.currentAiAttachment = null;
+    const previewEl = document.getElementById('ai-attachment-preview');
+    const fileInput = document.getElementById('ai-file-input');
+    
+    if (previewEl) previewEl.classList.add('hidden');
+    if (fileInput) fileInput.value = ""; 
+};
+
+// UI and Model Selector Controls
 window.toggleModelSelector = function() {
     const menu = document.getElementById('ai-model-menu');
     if(!menu) return;
@@ -184,45 +236,6 @@ window.useQuickPrompt = function(promptText) {
     }
 }
 
-// FILE ATTACHMENT
-window.handleAiFileSelect = function(input) {
-    if(input.files && input.files.length > 0) {
-        let file = input.files[0];
-        let ext = file.name.split('.').pop().toLowerCase();
-        let allowed = ['png', 'jpg', 'jpeg', 'webp', 'pdf'];
-        
-        if(!allowed.includes(ext)) { 
-            if(window.showToast) window.showToast("AI hanya baca Gambar & PDF.", "error"); 
-            input.value = ""; 
-            return; 
-        }
-        
-        let filePath = file.path || "";
-        try {
-            const { webUtils } = require('electron');
-            if (webUtils && webUtils.getPathForFile) filePath = webUtils.getPathForFile(file) || filePath;
-        } catch(e) {}
-        
-        try {
-            const fileBuffer = fs.readFileSync(filePath);
-            let mimeType = ext === 'jpg' ? 'image/jpeg' : (ext === 'pdf' ? 'application/pdf' : 'image/'+ext);
-            let base64 = fileBuffer.toString('base64');
-            window.currentAiFile = { name: file.name, type: mimeType, base64: base64 };
-            document.getElementById('ai-attachment-preview').classList.remove('hidden');
-            document.getElementById('ai-attachment-name').innerText = file.name;
-        } catch(e) { 
-            if(window.showToast) window.showToast("Gagal membaca file.", "error"); 
-        }
-    }
-}
-
-window.removeAiAttachment = function() {
-    window.currentAiFile = null;
-    document.getElementById('ai-file-input').value = "";
-    document.getElementById('ai-attachment-preview').classList.add('hidden');
-}
-
-// MESSAGE ACTIONS
 window.editChatMsg = function(index) {
     let session = window.getActiveSession();
     let msg = session.messages[index];
@@ -245,12 +258,12 @@ window.regenerateChatMsg = function() {
         window.saveSessions();
         
         document.getElementById('ai-input').value = lastUserMsg.text;
-        if(lastUserMsg.attachment) if(window.showToast) window.showToast("Silakan lampirkan ulang file untuk regenerate", "warning");
+        if(lastUserMsg.attachment) if(window.showToast) window.showToast("Silakan lampirkan ulang file untuk proses Regenerate", "warning");
         window.sendChatMessage();
     }
 }
 
-// CORE RENDERER ENGINE
+// Core DOM Renderer Engine
 window.renderChats = function() {
     const container = document.getElementById('chat-container');
     const headerTitle = document.getElementById('chat-header-title');
@@ -312,14 +325,11 @@ window.renderChats = function() {
             </div>`;
         } else {
             let formattedText = chat.text 
-                // 1. Gambar
                 .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, url) => {
                     let cleanUrl = url.trim().replace(/ /g, '%20');
                     return `<div class="mt-3 mb-2 bg-[#1a1b26] border border-[#3f3f46] rounded-xl overflow-hidden shadow-sm block w-full"><div class="relative bg-[#0f0f11] flex justify-center items-center min-h-[200px]"><img src="${cleanUrl}" alt="${alt}" onerror="this.outerHTML='<div class=\\'p-6 text-center text-red-400 font-mono text-[11px]\\'>❌ SERVER GAMBAR SEDANG SIBUK.<br><br>Coba klik link ini:<br><a href=\\'javascript:void(0)\\' onclick=\\'require(&quot;electron&quot;).shell.openExternal(&quot;${cleanUrl}&quot;)\\' class=\\'text-[#CCA35C] underline font-bold\\'>🔗 BUKA DI CHROME</a></div>'" class="w-full h-auto max-h-[400px] object-cover transition-opacity duration-300"></div><div class="px-3.5 py-3 bg-[#1f2023] border-t border-[#3f3f46] flex justify-between items-center"><span class="text-[10px] text-gray-400 font-mono tracking-widest flex items-center gap-1.5"><svg class="w-3.5 h-3.5 text-[#CCA35C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> AI IMAGE</span><div class="flex items-center gap-2"><button onclick="openDedicatedPreview('${cleanUrl}')" class="bg-[#2a2b32] hover:bg-[#3f3f46] text-gray-300 border border-[#4a4b50] text-[10px] font-bold py-1.5 px-3 rounded-lg flex items-center gap-1.5">PREVIEW</button><button onclick="downloadAiImage('${cleanUrl}', '${alt}')" class="bg-[#2a2b32] hover:bg-[#3f3f46] text-gray-300 border border-[#4a4b50] text-[10px] font-bold py-1.5 px-3 rounded-lg flex items-center gap-1.5">DOWNLOAD</button></div></div></div>`;
                 })
-                // 2. Bold
                 .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>')
-                // 3. Code Block
                 .replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
                     const uniqueId = 'code-' + Math.random().toString(36).substr(2, 9);
                     const langLabel = lang ? lang.toUpperCase() : 'CODE';
@@ -346,8 +356,27 @@ window.renderChats = function() {
                             </div>
                         </div>`;
                 })
-                // 4. Inline Code
-                .replace(/`([^`]+)`/g, '<code class="bg-[#1a1b26] border border-[#3f3f46] text-blue-300 px-1.5 py-0.5 rounded text-xs font-mono">$1</code>');
+                .replace(/`([^`]+)`/g, '<code class="bg-[#1a1b26] border border-[#3f3f46] text-blue-300 px-1.5 py-0.5 rounded text-xs font-mono">$1</code>')
+                // Premium ChatGPT-Style Inline Source Link
+                .replace(/(?<!\!)\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (match, text, url) => {
+                    return `<span class="relative inline-block ml-1.5 align-middle z-20 group/tooltip">
+                        <a href="javascript:void(0)" onclick="require('electron').shell.openExternal('${url}')" class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#2a2b32] hover:bg-[#3f3f46] border border-[#4a4b50] text-[10px] font-bold text-gray-400 hover:text-gray-200 transition-all shadow-sm cursor-pointer">
+                            <svg class="w-3 h-3 text-gray-500 group-hover/tooltip:text-blue-400 transition-colors" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path></svg>
+                            ${text}
+                        </a>
+                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-3.5 bg-[#1f2023] border border-[#3f3f46] rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.7)] opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-300 z-[100] pointer-events-none origin-bottom">
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="w-5 h-5 rounded-full bg-[#27272a] flex items-center justify-center border border-[#4a4b50] flex-shrink-0"><svg class="w-3 h-3 text-blue-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path></svg></div>
+                                <span class="text-[11px] font-bold text-gray-200 uppercase tracking-widest truncate flex-1">${text}</span>
+                            </div>
+                            <p class="text-[11px] text-gray-400 leading-relaxed line-clamp-2">${url}</p>
+                            <div class="text-blue-400 text-[10px] font-bold mt-2.5 uppercase tracking-widest flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg> Buka Artikel</div>
+                        </div>
+                    </span>`;
+                })
+
+                // Bullet List Point
+                .replace(/^[\*\-]\s+(.*)$/gm, '<div class="flex items-start gap-3 mt-2.5 mb-1.5"><svg class="w-2 h-2 text-blue-500 flex-shrink-0 mt-1.5 shadow-[0_0_8px_rgba(59,130,246,0.8)]" fill="currentColor" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"></circle></svg><div class="flex-1 leading-relaxed">$1</div></div>')
 
             const msgId = 'msg-' + Math.random().toString(36).substr(2, 9);
             let regenBtn = (index === session.messages.length - 1) ? `
@@ -391,7 +420,7 @@ window.renderChats = function() {
     }, 100);
 }
 
-// SENDER ENGINE (API GEMINI)
+// Core Sender Engine (API Call & Payload Construction)
 window.stopAiGeneration = function() {
     if(window.currentAiAbortController) {
         window.currentAiAbortController.abort(); 
@@ -405,29 +434,35 @@ window.sendChatMessage = async function() {
     const apiKey = localStorage.getItem('gemini_api_key');
     let session = window.getActiveSession();
 
-    if(!text && !window.currentAiFile) return;
+    // Prevent submission if both text and attachment are empty
+    if(!text && !window.currentAiAttachment) return;
+    
+    // Validate API Key
     if(!apiKey) { 
-        if(window.showToast) window.showToast("Masukkan API Key Gemini", "error"); 
+        if(window.showToast) window.showToast("Harap masukkan API Key Gemini", "error"); 
         window.openApiModal(); 
         return; 
     }
 
+    // Auto-rename chat session
     if(session.messages.length === 0 && (session.title === 'Obrolan Lama' || session.title === 'Obrolan Baru')) {
-        session.title = text.length > 25 ? text.substring(0, 25) + '...' : (text || "Menganalisa File");
+        session.title = text.length > 25 ? text.substring(0, 25) + '...' : (text || "Analisis Dokumen/Gambar");
         if(document.getElementById('chat-header-title')) document.getElementById('chat-header-title').innerText = session.title;
         window.renderChatHistoryList(); 
     }
 
-    let fileName = window.currentAiFile ? window.currentAiFile.name : null;
+    // Retrieve file name if an attachment exists
+    let fileName = window.currentAiAttachment ? window.currentAiAttachment.name : null;
     session.messages.push({ role: 'user', text: text || "[Mengirim Lampiran File]", attachment: fileName });
     window.saveSessions();
     
     inputEl.value = "";
     inputEl.style.height = "auto";
     
+    // Construct Payload Parts for Gemini
     let payloadParts = [];
     
-    // KNOWLEDGE BASE ENGINE (INGATAN PERUSAHAAN)
+    // Knowledge Base Engine (Enterprise Instruction Set)
     const knowledgeBase = `
     INFORMASI PENTING UNTUK AI (KNOWLEDGE BASE):
     1. Identitas Pengguna: Nama pengguna adalah Bagus Setiawan. Panggil dia "Bos" atau "Bos Bagus". Dia adalah seorang Freelance Web Developer, UI/UX Designer, dan mahasiswa Sistem Komputer di Universitas Pembangunan Panca Budi (UNPAB) Medan.
@@ -439,24 +474,49 @@ window.sendChatMessage = async function() {
     "FOR IMAGES: If the user asks for an image, you MUST reply with exactly this Markdown link format:\n" +
     "![Gambar](https://image.pollinations.ai/prompt/YOUR_PROMPT_EN?width=1080&height=720&nologo=true)\n" +
     "Replace YOUR_PROMPT_EN with a highly detailed English description. Use '%20' instead of spaces. Do NOT use code blocks for the image link.\n\n" +
+    "FOR TASKS/REMINDERS: Act as an Elite Project Manager. Analyze the urgency of the user's request. If it involves clients, bugs, tomorrow morning ('besok pagi'), revisions, or urgent tone, set priority to 'urgent'. Otherwise 'normal'. You MUST append this JSON at the VERY END of your response:\n" +
+    "|||TASK:{\"title\":\"Task Name\",\"time\":\"HH:MM\",\"priority\":\"urgent\" or \"normal\",\"ai_notes\":\"Short reason for urgency/strategy\"}|||\n" +
+    "FOR WEB SEARCH/NEWS/LISTS: You MUST format your search results as bullet points (*). At the VERY END of each bullet point sentence, you MUST provide the source using strictly this Markdown link format: [Name of Publisher](URL). Example: * Apple merilis Macbook baru. [MacRumors](https://macrumors.com/...)\n\n" +
     knowledgeBase + "\n\n";
     
     if (window.currentAiMode === 'penalaran') systemPrompt += "Current Mode: DEEP THINKING.\n\n";
     else if (window.currentAiMode === 'pro') systemPrompt += "Current Mode: PRO.\n\n";
     else systemPrompt += "Current Mode: FAST.\n\n";
 
-    payloadParts.push({ text: systemPrompt + (text || "Tolong analisa file ini.") });
+    // Push text context to payload
+    payloadParts.push({ text: systemPrompt + (text || "Tolong analisa isi dari lampiran ini dengan detail dan profesional.") });
     
-    if (window.currentAiFile) {
-        payloadParts.push({ inlineData: { mimeType: window.currentAiFile.type, data: window.currentAiFile.base64 } });
+    // Append inline data if attachment exists in current context
+    if (window.currentAiAttachment) {
+        payloadParts.push({ 
+            inlineData: { 
+                mimeType: window.currentAiAttachment.mimeType, 
+                data: window.currentAiAttachment.data 
+            } 
+        });
         window.removeAiAttachment(); 
+    }
+
+    // Prepare Core API Payload Structure
+    let apiPayload = {
+        contents: [{ parts: payloadParts }]
+    };
+
+    // Smart Web Search Radar (Google Grounding)
+    const searchKeywords = ['terbaru', 'hari ini', 'sekarang', 'berita', 'tren', 'harga', 'cuaca', 'update', 'siapa', 'kapan', 'cari', 'hari apa', 'jam berapa'];
+    const isNeedInternet = searchKeywords.some(keyword => text.toLowerCase().includes(keyword));
+
+    if (isNeedInternet) {
+        apiPayload.tools = [{ googleSearch: {} }];
+        if(window.showToast) window.showToast("Mengaktifkan Radar Web Search...", "success");
     }
 
     window.renderChats();
 
+    // Render loading indicator
     const container = document.getElementById('chat-container');
     const typingId = 'typing-' + Date.now();
-    const loadingText = window.currentAiMode === 'penalaran' ? "Berpikir mendalam..." : "Memproses data...";
+    const loadingText = window.currentAiMode === 'penalaran' ? "Menganalisis data mendalam..." : "Memproses file dan data...";
     
     container.innerHTML += `
         <div id="${typingId}" class="flex gap-4 mt-5 fade-in">
@@ -474,11 +534,12 @@ window.sendChatMessage = async function() {
 
     window.currentAiAbortController = new AbortController();
 
+    // Execute API Request
     try {
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: payloadParts }] }),
+            body: JSON.stringify(apiPayload), // Using the advanced payload
             signal: window.currentAiAbortController.signal
         });
         const data = await response.json();
@@ -492,7 +553,25 @@ window.sendChatMessage = async function() {
             return; 
         }
 
-        const aiReply = data.candidates[0].content.parts[0].text;
+        let aiReply = data.candidates[0].content.parts.map(part => part.text || "").join("\n\n");
+
+        // Evolved AI Auto-Task Creator Interceptor
+        const taskRegex = /\|\|\|TASK:(.*?)\|\|\|/;
+        const match = aiReply.match(taskRegex);
+        
+        if (match && match[1]) {
+            try {
+                const taskData = JSON.parse(match[1]);
+                aiReply = aiReply.replace(taskRegex, '').trim(); 
+                
+                if (typeof window.autoCreateTask === 'function') {
+                    window.autoCreateTask(taskData.title, taskData.time, taskData.priority, taskData.ai_notes);
+                }
+            } catch (e) {
+                console.error("Enterprise Error: Failed to parse Evolved AI Task JSON", e);
+            }
+        }
+
         session.messages.push({ role: 'ai', text: aiReply });
         window.saveSessions();
         window.renderChats();
@@ -503,10 +582,48 @@ window.sendChatMessage = async function() {
         document.getElementById('btn-stop-chat').classList.add('hidden');
         
         if (error.name === 'AbortError') {
-            if(window.showToast) window.showToast("Pemikiran AI Diberhentikan Secara Paksa.", "warning");
+            if(window.showToast) window.showToast("Proses AI Dibatalkan Oleh Pengguna.", "warning");
         } else {
-            if(window.showToast) window.showToast("Gagal terhubung ke AI. Cek koneksi internet.", "error");
-            console.error(error);
+            if(window.showToast) window.showToast("Gagal terhubung ke AI. Cek koneksi internet Bos.", "error");
+            console.error("AI Error Request: ", error);
         }
     }
+}
+
+// Evolved AI Auto-Task Creator Bridge
+window.autoCreateTask = function(title, time, priority, aiNotes) {
+    let storageKey = 'notiybot_tasks'; 
+    let tasks = JSON.parse(localStorage.getItem(storageKey)) || [];
+    
+    let iconAI = `<svg class="w-3.5 h-3.5 inline-block text-purple-400 translate-y-[-1px] mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>`;
+    let iconTime = `<svg class="w-3.5 h-3.5 inline-block text-blue-400 translate-y-[-1px] mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+
+    let finalDescription = aiNotes 
+        ? `${iconAI}<span class="text-purple-300 font-semibold tracking-wide">Analisis AI:</span> <span class="text-gray-300">${aiNotes}</span><br>${iconTime}<span class="text-gray-400 font-medium tracking-wide">Waktu: ${time || '-'}</span>` 
+        : (time ? `${iconTime}<span class="text-gray-400 font-medium tracking-wide">Waktu: ${time}</span>` : `${iconAI}<span class="text-gray-400 font-medium tracking-wide">Ditambahkan otomatis oleh AI</span>`);
+
+    let newTask = {
+        text: title, 
+        description: finalDescription,
+        priority: priority || 'normal',
+        fileName: "", 
+        filePath: "", 
+        completed: false, 
+        category: 'task'
+    };
+    
+    tasks.push(newTask);
+    localStorage.setItem(storageKey, JSON.stringify(tasks));
+    
+    if(window.tasks) window.tasks = tasks;
+    
+    if(window.showToast) {
+        if (priority === 'urgent') {
+            window.showToast(`URGENSI TERDETEKSI: ${title} ditambahkan!`, "error");
+        } else {
+            window.showToast(`AI menambahkan tugas: ${title}`, "success");
+        }
+    }
+    
+    if(typeof window.renderTasks === 'function') window.renderTasks();
 }

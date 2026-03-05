@@ -1,14 +1,23 @@
-// const { shell } = require('electron');
-// const fs = require('fs');
+/**
+ * Core Task Management Module
+ * Handles local storage synchronization, DOM rendering, form submissions, and status toggles.
+ */
 
-// VARIABLES TODO & TASK
 window.activeTodoTab = 'todo'; 
 window.tasks = JSON.parse(localStorage.getItem('notiybot_tasks')) || [];
 window.tempFileName = "";
 window.tempFilePath = "";
 
+/**
+ * Data Migration
+ * Ensures legacy tasks conform to the new structure requiring a 'category' property.
+ */
 window.tasks = window.tasks.map(t => ({ ...t, category: t.category || 'todo' }));
 
+/**
+ * Handles tab navigation within the Todo view (To-Do, Task, History).
+ * @param {string} tab - The target tab identifier.
+ */
 window.switchTodoTab = function(tab) {
     window.activeTodoTab = tab;
     
@@ -39,9 +48,14 @@ window.switchTodoTab = function(tab) {
     window.renderTasks();
 }
 
+/**
+ * Toggles the visibility of the advanced task creation form and resets internal states.
+ * @param {boolean} show - Dictates form visibility state.
+ */
 window.toggleTaskForm = function(show) {
     const btnShowTask = document.getElementById('btn-show-task-form');
     const formTask = document.getElementById('task-input-container');
+    
     if(show) {
         btnShowTask.style.display = 'none';
         formTask.style.display = 'block';
@@ -49,10 +63,16 @@ window.toggleTaskForm = function(show) {
     } else {
         btnShowTask.style.display = 'block';
         formTask.style.display = 'none';
+        
         document.getElementById('task-title').value = "";
         document.getElementById('task-desc').value = "";
         document.getElementById('task-priority').value = "normal";
         document.getElementById('task-file').value = "";
+        
+        const startEl = document.getElementById('task-start');
+        const deadlineEl = document.getElementById('task-deadline');
+        if (startEl) startEl.value = "";
+        if (deadlineEl) deadlineEl.value = "";
         
         const nameEl = document.getElementById('task-file-name');
         if(nameEl) {
@@ -64,6 +84,11 @@ window.toggleTaskForm = function(show) {
     }
 }
 
+/**
+ * Extracts and prepares file attachment data for the task payload.
+ * Relies on Electron's webUtils for absolute path resolution.
+ * @param {HTMLInputElement} input - The file input DOM node.
+ */
 window.updateFileName = function(input) {
     const nameEl = document.getElementById('task-file-name');
     if (input.files && input.files.length > 0) {
@@ -77,7 +102,9 @@ window.updateFileName = function(input) {
                 let absolutePath = webUtils.getPathForFile(fileObj);
                 if (absolutePath) window.tempFilePath = absolutePath;
             }
-        } catch(e) { }
+        } catch(e) { 
+            console.warn("Electron webUtils not accessible, using default path behavior.", e);
+        }
 
         nameEl.innerText = window.tempFileName;
         nameEl.classList.add('text-blue-400');
@@ -89,6 +116,9 @@ window.updateFileName = function(input) {
     }
 }
 
+/**
+ * Constructs and injects the HTML markup for tasks based on the active tab state.
+ */
 window.renderTasks = function() {
     const container = document.getElementById('todo-list-container');
     if (!container) return;
@@ -134,6 +164,10 @@ window.renderTasks = function() {
                 ? `<span class="bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">Urgent</span>`
                 : `<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">Normal</span>`;
             
+            let deadlineBadge = task.deadline && !isDone
+                ? `<span class="bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider flex items-center gap-1.5"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> ${task.deadline.replace('T', ' ')}</span>` 
+                : '';
+
             let descHtml = task.description ? `<p class="text-xs text-gray-400 mt-1.5 leading-relaxed line-clamp-2">${task.description}</p>` : '';
             let fileHtml = task.fileName ? `<div class="mt-2.5 inline-flex items-center gap-1.5 bg-[#18181b] border border-[#3f3f46] text-xs text-gray-300 px-2.5 py-1 rounded-md" title="${task.filePath}"><svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg><span class="truncate max-w-[150px]">${task.fileName}</span></div>` : '';
 
@@ -143,9 +177,10 @@ window.renderTasks = function() {
                     <div class="flex items-start gap-3 flex-1 cursor-pointer group/btn" onclick="openTaskDetail(${index})">
                         ${checkIcon}
                         <div class="flex-1">
-                            <div class="flex items-center gap-2 mb-0.5">
+                            <div class="flex flex-wrap items-center gap-2 mb-0.5">
                                 <h4 class="font-bold text-sm transition-all duration-300 ${titleStyle}">${task.text}</h4>
                                 ${!isDone ? priorityBadge : ''}
+                                ${deadlineBadge}
                             </div>
                             ${!isDone ? descHtml : ''}
                             ${!isDone ? fileHtml : ''}
@@ -157,6 +192,9 @@ window.renderTasks = function() {
     });
 }
 
+/**
+ * Handles submission for quick To-Do items (Simple input field).
+ */
 window.addTask = function() {
     const input = document.getElementById('todo-input');
     const text = input.value.trim();
@@ -170,10 +208,18 @@ window.addTask = function() {
     }
 }
 
+/**
+ * Validates and commits the full Task form payload to the storage engine.
+ */
 window.submitTask = function() {
     const title = document.getElementById('task-title').value.trim();
     const desc = document.getElementById('task-desc').value.trim();
     const priority = document.getElementById('task-priority').value;
+    
+    const startEl = document.getElementById('task-start');
+    const deadlineEl = document.getElementById('task-deadline');
+    const startDate = startEl ? startEl.value : "";
+    const deadline = deadlineEl ? deadlineEl.value : "";
     
     if (title === "") {
         if(window.showToast) window.showToast("Judul Task wajib diisi, Bos!", "error");
@@ -184,6 +230,8 @@ window.submitTask = function() {
         text: title, 
         description: desc,
         priority: priority,
+        startDate: startDate,
+        deadline: deadline,
         fileName: window.tempFileName, 
         filePath: window.tempFilePath, 
         completed: false, 
@@ -193,35 +241,61 @@ window.submitTask = function() {
     localStorage.setItem('notiybot_tasks', JSON.stringify(window.tasks));
     window.toggleTaskForm(false); 
     window.renderTasks();
+    
+    // Trigger calendar re-render to reflect new tasks instantly
+    if (typeof window.renderCalendarApp === 'function') {
+        window.renderCalendarApp();
+    }
+    
     if(window.showToast) window.showToast("Task berhasil disimpan!", "success");
 }
 
+/**
+ * Toggles completion status and dispatches UI state updates.
+ * @param {number} index - Index of the task in the global storage array.
+ */
 window.toggleTask = function(index) {
     window.tasks[index].completed = !window.tasks[index].completed;
     localStorage.setItem('notiybot_tasks', JSON.stringify(window.tasks));
     
     if(window.tasks[index].completed) {
-        if(window.showToast) window.showToast("Mantap! Diselesaikan & masuk History 🚀", "success");
+        if(window.showToast) window.showToast("Mantap! Diselesaikan & masuk History", "success");
     } else {
         if(window.showToast) window.showToast("Dikembalikan ke antrean!", "success");
     }
+    
     window.renderTasks();
+    
+    if (typeof window.renderCalendarApp === 'function') {
+        window.renderCalendarApp();
+    }
 }
 
+/**
+ * Deletes a specific task and mutates the storage engine.
+ * @param {number} index - Targeted task index.
+ */
 window.deleteTask = function(index) {
     window.tasks.splice(index, 1);
     localStorage.setItem('notiybot_tasks', JSON.stringify(window.tasks));
     window.renderTasks();
+    
+    if (typeof window.renderCalendarApp === 'function') {
+        window.renderCalendarApp();
+    }
 }
 
-// MODAL DETAIL TASK
+/**
+ * Populates and summons the Detailed Task view modal.
+ * @param {number} index - Targeted task index.
+ */
 window.openTaskDetail = function(index) {
     const task = window.tasks[index];
     
     document.getElementById('detail-title').innerText = task.text;
     
     const descEl = document.getElementById('detail-desc');
-    descEl.innerText = task.description ? task.description : "Tidak ada deskripsi tambahan.";
+    descEl.innerHTML = task.description ? task.description : "Tidak ada deskripsi tambahan.";
     descEl.className = task.description ? "text-sm text-gray-300 leading-relaxed whitespace-pre-wrap" : "text-sm text-gray-500 italic";
 
     const badgeEl = document.getElementById('detail-priority-badge');
@@ -231,11 +305,19 @@ window.openTaskDetail = function(index) {
         badgeEl.innerHTML = `<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider inline-flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> NORMAL</span>`;
     }
 
+    const deadlineBadgeEl = document.getElementById('detail-deadline-badge');
+    if (deadlineBadgeEl) {
+        if (task.deadline) {
+            deadlineBadgeEl.innerHTML = `<span class="bg-red-500/10 text-red-400 border border-red-500/20 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider inline-flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> DL: ${task.deadline.replace('T', ' ')}</span>`;
+        } else {
+            deadlineBadgeEl.innerHTML = '';
+        }
+    }
+
     const fileContainer = document.getElementById('detail-file-container');
     const fileBtn = document.getElementById('detail-file-btn');
     const previewContainer = document.getElementById('detail-image-preview');
     const previewImg = document.getElementById('detail-preview-img');
-    const actionText = document.getElementById('detail-file-action-text');
     
     if (task.fileName) {
         fileContainer.classList.remove('hidden');
@@ -254,11 +336,9 @@ window.openTaskDetail = function(index) {
                 const base64Data = `data:image/${mimeType};base64,${fileBuffer.toString('base64')}`;
                 
                 previewImg.src = base64Data;
-                
                 previewContainer.onclick = () => { window.openImageViewer(base64Data); };
-                
             } catch (err) {
-                console.error("Gagal membaca gambar", err);
+                console.error("Image Buffer Exception", err);
                 previewContainer.classList.add('hidden');
             }
         } else {
@@ -267,7 +347,7 @@ window.openTaskDetail = function(index) {
 
         fileBtn.onclick = () => { 
             if(realPath && fs.existsSync(realPath)) shell.openPath(realPath); 
-            else if(window.showToast) window.showToast("File sudah dipindahkan atau dihapus dari komputer.", "error");
+            else if(window.showToast) window.showToast("File missing from native OS path.", "error");
         };
     } else {
         fileContainer.classList.add('hidden');
@@ -279,12 +359,18 @@ window.openTaskDetail = function(index) {
     document.getElementById('task-detail-content').classList.remove('scale-95');
 }
 
+/**
+ * Dismisses the Task Detail Modal.
+ */
 window.closeTaskDetail = function() {
     document.getElementById('modal-task-detail').classList.add('opacity-0', 'pointer-events-none');
     document.getElementById('task-detail-content').classList.add('scale-95');
 }
 
-// FUNGSI IN-APP IMAGE VIEWER
+/**
+ * Image Viewer Module
+ * Renders full-scale images directly within the Electron window.
+ */
 window.openImageViewer = function(imgSrc) {
     const modal = document.getElementById('modal-image-viewer');
     const imgEl = document.getElementById('viewer-full-img');

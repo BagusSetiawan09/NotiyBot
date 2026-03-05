@@ -1,0 +1,74 @@
+<div class="flex h-full w-full relative overflow-hidden fade-in">
+    
+    <div id="daily-schedule-view" class="flex-1 flex flex-col h-full pr-6 pl-2 transition-all duration-300">
+        
+        <div class="flex items-center justify-between mt-4 mb-6">
+            <div class="flex items-center gap-5">
+                <button onclick="navigateDay(-1)" class="p-2 rounded-lg bg-transparent hover:bg-[#2a2b32] text-gray-400 hover:text-white transition cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+                <div class="flex flex-col">
+                    <h2 class="text-2xl font-bold text-white tracking-tight" id="schedule-day-name">Memuat...</h2>
+                    <p class="text-sm font-medium text-gray-500 mt-0.5" id="schedule-date-text">... <span class="text-blue-400 ml-1" id="schedule-today-badge">Today</span></p>
+                </div>
+                <button onclick="navigateDay(1)" class="p-2 rounded-lg bg-transparent hover:bg-[#2a2b32] text-gray-400 hover:text-white transition cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+            </div>
+            
+            <div class="flex bg-[#18181b] p-1 rounded-lg border border-[#3f3f46] shadow-sm">
+                <button class="bg-blue-600 text-white px-4 py-1.5 rounded-md text-xs font-bold shadow-md">Day</button>
+                <button class="text-gray-400 px-4 py-1.5 rounded-md text-xs font-bold hover:text-white transition">Week</button>
+            </div>
+        </div>
+
+        <div class="bg-[#1e1e22] border border-[#3f3f46] rounded-xl p-4 mb-6 flex items-center gap-4 shadow-sm">
+            <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest w-16">Timeline</span>
+            <div class="flex-1 h-3 bg-[#2a2b32] rounded-full overflow-hidden flex relative">
+                <div class="absolute left-[10%] w-[30%] bg-purple-500/80 h-full rounded-full"></div>
+                <div class="absolute left-[45%] w-[15%] bg-orange-500/80 h-full rounded-full"></div>
+                <div class="absolute left-[65%] w-[1px] bg-red-500 h-full z-10" title="Waktu Saat Ini"></div>
+            </div>
+            <span class="text-[11px] text-gray-400 font-bold" id="timeline-hours-text">0h scheduled</span>
+        </div>
+
+        <div id="schedule-tasks-list" class="flex-1 overflow-y-auto space-y-3 pb-24 custom-scrollbar pr-2">
+            </div>
+
+        <button onclick="document.getElementById('nav-todo').click(); setTimeout(() => window.toggleTaskForm(true), 100);" class="absolute bottom-8 right-10 w-14 h-14 bg-blue-600 hover:bg-blue-500 rounded-full flex items-center justify-center text-white shadow-[0_10px_25px_-5px_rgba(37,99,235,0.6)] transition-all hover:scale-105 hover:-translate-y-1 z-30 group">
+            <svg class="w-6 h-6 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+        </button>
+
+    </div>
+
+   <div class="relative flex items-center justify-center z-50">
+        <button onclick="toggleMonthlySidebar()" class="absolute -left-4 w-8 h-8 bg-[#27272a] border border-[#3f3f46] rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#3f3f46] shadow-lg transition cursor-pointer">
+            <svg id="sidebar-toggle-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+        </button>
+    </div>
+
+    <div id="monthly-sidebar" class="w-0 overflow-hidden transition-all duration-300 ease-in-out flex flex-col bg-[#141417] border-l border-[#3f3f46] h-full opacity-0 relative">
+        <div class="w-[280px] p-5 flex-shrink-0 flex flex-col h-full">
+            
+            <div class="flex items-center justify-between mb-6">
+                <button onclick="changeMonth(-1)" class="p-1.5 rounded bg-[#27272a] hover:bg-[#3f3f46] text-gray-400 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button>
+                <span id="calendar-month-year" class="font-bold text-sm text-gray-200 tracking-wide">Bulan Tahun</span>
+                <button onclick="changeMonth(1)" class="p-1.5 rounded bg-[#27272a] hover:bg-[#3f3f46] text-gray-400 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
+            </div>
+
+            <div class="grid grid-cols-7 gap-1 mb-2">
+                <div class="text-center text-[9px] font-bold text-red-400 uppercase">Mi</div>
+                <div class="text-center text-[9px] font-bold text-gray-500 uppercase">Se</div>
+                <div class="text-center text-[9px] font-bold text-gray-500 uppercase">Se</div>
+                <div class="text-center text-[9px] font-bold text-gray-500 uppercase">Ra</div>
+                <div class="text-center text-[9px] font-bold text-gray-500 uppercase">Ka</div>
+                <div class="text-center text-[9px] font-bold text-gray-500 uppercase">Ju</div>
+                <div class="text-center text-[9px] font-bold text-blue-400 uppercase">Sa</div>
+            </div>
+
+            <div id="calendar-grid" class="grid grid-cols-7 gap-1 flex-1 auto-rows-max content-start">
+                </div>
+
+        </div>
+    </div>
+</div>
