@@ -79,14 +79,14 @@ window.loadView = function(viewName) {
         
         document.getElementById('main-content').innerHTML = data;
         
-        ['home', 'todo', 'think', 'settings', 'timer'].forEach(t => {
-            const navBtn = document.getElementById(`nav-${t}`);
-            if(navBtn) {
-                navBtn.classList.remove('bg-[#3f3f46]', 'text-white');
-                navBtn.classList.add('text-gray-400');
-            }
+        // BUGFIX: RESET SEMUA TOMBOL OTOMATIS TANPA PERLU DIDAFTARKAN MANUAL
+        const allNavBtns = document.querySelectorAll('.nav-btn');
+        allNavBtns.forEach(btn => {
+            btn.classList.remove('bg-[#3f3f46]', 'text-white');
+            btn.classList.add('text-gray-400');
         });
         
+        // NYALAKAN TOMBOL YANG AKTIF
         const activeNav = document.getElementById(`nav-${viewName}`);
         if(activeNav) {
             activeNav.classList.add('bg-[#3f3f46]', 'text-white');
@@ -113,6 +113,9 @@ window.loadView = function(viewName) {
                 }
             }
         }
+
+        // PELATUK (TRIGGER) UNTUK MODULE BARU SEPERTI CALENDAR DAN SPACES
+        window.dispatchEvent(new CustomEvent('tabSwitched', { detail: viewName }));
     });
 }
 
