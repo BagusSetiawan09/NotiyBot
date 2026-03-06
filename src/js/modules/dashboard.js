@@ -1,57 +1,104 @@
-// VARIABLES HOME & WIDGET
+/**
+ * @fileoverview Dashboard & Home Engine
+ * Handles clock ticking, pomodoro timer, hydration tracking, and unified daily snapshot.
+ */
+
 window.clockInterval = null;
 window.waterCount = localStorage.getItem('waterCount') ? parseInt(localStorage.getItem('waterCount')) : 0;
 
-// VARIABLES POMODORO
 window.pomoTimeLeft = 25 * 60;
 window.pomoIsRunning = false;
 window.pomoMode = 'focus'; 
 window.pomoInterval = null;
 
-// INITIALIZE HOME
+/**
+ * Initializes home components on load
+ */
 window.initHomeLogic = function() {
     window.updateClock();
     if(!window.clockInterval) window.clockInterval = setInterval(window.updateClock, 1000);
     window.updatePomoUI();
     window.updateWater(0);
     window.updateDndUI();
+    window.updateDailySnapshot(); // Render initial data snapshot
 
     const quotes = [
-        '"Fokuslah menjadi produktif, bukan sekadar sibuk." - Tim Ferriss',
-        '"Ambil jeda. Bernapas. Lanjutkan dengan fokus."',
-        '"Satu jam deep work lebih baik dari tiga jam kerja terdistraksi."',
-        '"Konsistensi adalah kunci dari kesuksesan yang sesungguhnya."',
-        '"Ide itu murah, eksekusi itu mahal. Ayo kerjakan!"'
+        '"Focus on being productive instead of busy." - Tim Ferriss',
+        '"Take a pause. Breathe. Resume with focus."',
+        '"One hour of deep work is better than three hours of distracted work."',
+        '"Consistency is the true key to success."',
+        '"Ideas are cheap, execution is expensive. Let\'s get to work!"'
     ];
     const qEl = document.getElementById('quote-text');
     if(qEl) qEl.innerText = quotes[Math.floor(Math.random() * quotes.length)];
 }
 
-// CLOCK & UP NEXT ENGINE
+/**
+ * Updates the daily snapshot aggregating data from tasks, hydration, and screen time.
+ */
+window.updateDailySnapshot = function() {
+    // Retrieve Task Data
+    let tasks = JSON.parse(localStorage.getItem('notiybot_tasks')) || [];
+    let completedTasks = tasks.filter(t => t.completed).length;
+    let totalTasks = tasks.length;
+    let snapTasksEl = document.getElementById('snap-tasks');
+    if(snapTasksEl) snapTasksEl.innerText = `${completedTasks}/${totalTasks} Tasks`;
+
+    // Retrieve Hydration Data
+    let water = window.waterCount || 0;
+    let snapWaterEl = document.getElementById('snap-water');
+    if(snapWaterEl) snapWaterEl.innerText = `${water}/8 Glasses`;
+
+    // Retrieve Screen Time Data
+    let stData = JSON.parse(localStorage.getItem('notiybot_screentime_today')) || [];
+    let totalMs = stData.reduce((acc, item) => acc + item.durationMs, 0);
+    let formattedST = "0m";
+    if (totalMs > 0) {
+        if (totalMs < 60000) formattedST = "< 1m"; 
+        else {
+            const totalMins = Math.floor(totalMs / 60000);
+            const h = Math.floor(totalMins / 60);
+            const m = totalMins % 60;
+            formattedST = h > 0 ? `${h}h ${m}m` : `${m}m`;
+        }
+    }
+    let snapSTEl = document.getElementById('snap-screentime');
+    if(snapSTEl) snapSTEl.innerText = formattedST;
+
+    // Apply fade-in animation
+    let snapContainer = document.getElementById('daily-snapshot');
+    if(snapContainer) snapContainer.classList.remove('opacity-0');
+}
+
+/**
+ * Updates clock and greeting UI
+ */
 window.updateClock = function() {
     const now = new Date();
-    const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-    const dateStr = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     
     const hours = now.getHours();
-    let greeting = 'Good Evening';
-    if (hours >= 4 && hours < 11) greeting = 'Good Morning ☀️';
-    else if (hours >= 11 && hours < 15) greeting = 'Good Afternoon 🌤️';
-    else if (hours >= 15 && hours < 18) greeting = 'Good Afternoon ⛅';
-    else if (hours >= 18 && hours < 23) greeting = 'Good Evening 🌙';
-    else greeting = 'Working Late? 🦉';
+    let greeting = 'Good evening';
+    if (hours >= 4 && hours < 11) greeting = 'Good morning';
+    else if (hours >= 11 && hours < 17) greeting = 'Good afternoon';
+    else if (hours >= 17 && hours < 22) greeting = 'Good evening';
+    else greeting = 'Working late?';
 
-    if(document.getElementById('live-time')) document.getElementById('live-time').innerText = timeStr.replace('.', ':');
+    if(document.getElementById('live-time')) document.getElementById('live-time').innerText = timeStr;
     if(document.getElementById('live-date')) document.getElementById('live-date').innerText = dateStr;
     if(document.getElementById('dynamic-greeting')) document.getElementById('dynamic-greeting').innerText = greeting;
 
     window.calculateUpNext(now);
 }
 
+/**
+ * Calculates and displays the next scheduled mode/timer
+ */
 window.calculateUpNext = function(now) {
     const { ipcRenderer } = require('electron');
     const config = ipcRenderer.sendSync('get-config');
-    let nextName = "Belum ada jadwal hari ini";
+    let nextName = "No upcoming schedule";
     let minDiff = Infinity;
 
     if (config && config.customModes) {
@@ -73,15 +120,17 @@ window.calculateUpNext = function(now) {
     const upNextEl = document.getElementById('up-next-text');
     if(upNextEl) {
         if(minDiff !== Infinity) {
-            let timeStr = minDiff >= 60 ? `${Math.floor(minDiff/60)}j ${minDiff%60}m` : `${minDiff} Menit`;
-            upNextEl.innerHTML = `<span class="text-purple-400">${nextName}</span><br>Dalam ${timeStr} lagi`;
+            let timeStr = minDiff >= 60 ? `${Math.floor(minDiff/60)}h ${minDiff%60}m` : `${minDiff} min`;
+            upNextEl.innerHTML = `<span class="text-white">${nextName}</span><br><span class="text-gray-500">In ${timeStr}</span>`;
         } else {
-            upNextEl.innerText = "Mode Interval Sedang Aktif";
+            upNextEl.innerText = "Interval mode is currently active";
         }
     }
 }
 
-// POMODORO ENGINE
+/**
+ * Pomodoro Engine: Toggles start/pause state
+ */
 window.togglePomodoro = function() {
     const { ipcRenderer } = require('electron');
     window.pomoIsRunning = !window.pomoIsRunning;
@@ -94,13 +143,13 @@ window.togglePomodoro = function() {
                 if(window.pomoMode === 'focus') {
                     window.pomoMode = 'break';
                     window.pomoTimeLeft = 5 * 60;
-                    if(window.showToast) window.showToast("Fokus Selesai! Istirahat 5 menit.", "success");
-                    ipcRenderer.send('notify-system', "Bagus Bos! Waktunya Istirahat 5 Menit ☕");
+                    if(window.showToast) window.showToast("Focus completed! Take a 5 min break.", "success");
+                    ipcRenderer.send('notify-system', "Great job! Time for a 5-minute break.");
                 } else {
                     window.pomoMode = 'focus';
                     window.pomoTimeLeft = 25 * 60;
-                    if(window.showToast) window.showToast("Istirahat Selesai! Kembali fokus.", "success");
-                    ipcRenderer.send('notify-system', "Waktu Istirahat Habis! Ayo Mulai Fokus Lagi 💻");
+                    if(window.showToast) window.showToast("Break is over! Back to focus.", "success");
+                    ipcRenderer.send('notify-system', "Break time is up! Let's get back to work.");
                 }
             }
             window.updatePomoUI();
@@ -111,6 +160,9 @@ window.togglePomodoro = function() {
     window.updatePomoUI();
 }
 
+/**
+ * Pomodoro Engine: Resets timer
+ */
 window.resetPomodoro = function() {
     clearInterval(window.pomoInterval);
     window.pomoIsRunning = false;
@@ -119,12 +171,14 @@ window.resetPomodoro = function() {
     window.updatePomoUI();
 }
 
+/**
+ * Syncs Pomodoro variables to the UI
+ */
 window.updatePomoUI = function() {
     const timeEl = document.getElementById('pomo-time');
     const textEl = document.getElementById('pomo-status-text');
     const btnPlay = document.getElementById('btn-pomo-play');
     const progEl = document.getElementById('pomo-progress');
-    const pingEl = document.getElementById('pomo-ping');
     const dotEl = document.getElementById('pomo-dot');
 
     if(!timeEl) return;
@@ -133,32 +187,31 @@ window.updatePomoUI = function() {
     const s = (window.pomoTimeLeft % 60).toString().padStart(2, '0');
     timeEl.innerText = `${m}:${s}`;
     
-    textEl.innerText = window.pomoMode === 'focus' ? 'SESI FOKUS (25 MNT)' : 'WAKTU ISTIRAHAT (5 MNT)';
-    textEl.className = window.pomoMode === 'focus' ? "text-[11px] text-blue-400 font-bold tracking-widest uppercase" : "text-[11px] text-green-400 font-bold tracking-widest uppercase";
+    textEl.innerText = window.pomoMode === 'focus' ? 'Focus Session (25m)' : 'Short Break (5m)';
     
     let total = window.pomoMode === 'focus' ? 25 * 60 : 5 * 60;
     let percent = ((total - window.pomoTimeLeft) / total) * 100;
     progEl.style.width = `${percent}%`;
 
     if(window.pomoMode === 'focus') {
-        progEl.className = "bg-gradient-to-r from-blue-600 to-cyan-400 h-1.5 rounded-full transition-all duration-1000 ease-linear";
-        dotEl.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500";
+        progEl.className = "bg-blue-500 h-full rounded-full transition-all duration-1000 ease-linear";
+        dotEl.className = "w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]";
     } else {
-        progEl.className = "bg-gradient-to-r from-green-500 to-emerald-400 h-1.5 rounded-full transition-all duration-1000 ease-linear";
-        dotEl.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500";
+        progEl.className = "bg-green-500 h-full rounded-full transition-all duration-1000 ease-linear";
+        dotEl.className = "w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]";
     }
 
     if(window.pomoIsRunning) {
-        btnPlay.innerHTML = `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>`;
-        pingEl.classList.remove('hidden');
+        btnPlay.innerHTML = `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 4h3v12H5V4zm7 0h3v12h-3V4z" clip-rule="evenodd"></path></svg>`;
     } else {
-        btnPlay.innerHTML = `<svg class="w-5 h-5 pl-0.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"></path></svg>`;
-        pingEl.classList.add('hidden');
-        if(window.pomoTimeLeft === total) dotEl.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-gray-500";
+        btnPlay.innerHTML = `<svg class="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"></path></svg>`;
+        if(window.pomoTimeLeft === total) dotEl.className = "w-2.5 h-2.5 rounded-full bg-gray-600";
     }
 }
 
-// WATER TRACKER ENGINE
+/**
+ * Hydration Tracker logic
+ */
 window.updateWater = function(val) {
     window.waterCount += val;
     if(window.waterCount < 0) window.waterCount = 0;
@@ -168,11 +221,16 @@ window.updateWater = function(val) {
     const countEl = document.getElementById('water-count');
     if(countEl) {
         countEl.innerText = window.waterCount;
-        countEl.className = window.waterCount >= 8 ? "text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]" : "";
+        countEl.className = window.waterCount >= 8 ? "text-3xl font-medium text-cyan-400" : "text-3xl font-medium text-white";
     }
+    
+    // Update snapshot on hydration change
+    if(typeof window.updateDailySnapshot === 'function') window.updateDailySnapshot();
 }
 
-// DND (DO NOT DISTURB) ENGINE
+/**
+ * DND (Do Not Disturb) Engine Toggle
+ */
 window.toggleDND = function() {
     const { ipcRenderer } = require('electron');
     window.isDnd = !window.isDnd;
@@ -183,33 +241,45 @@ window.toggleDND = function() {
 
     window.updateDndUI();
     if(window.isDnd) {
-        if(window.showToast) window.showToast("Mode Senyap Aktif! Pop-up ditahan.", "success");
+        if(window.showToast) window.showToast("DND Active. Pop-ups suppressed.", "success");
     } else {
-        if(window.showToast) window.showToast("Mode Senyap Nonaktif.", "success");
+        if(window.showToast) window.showToast("DND Disabled.", "success");
     }
 }
 
+/**
+ * Updates DND Visual State
+ */
 window.updateDndUI = function() {
     const thumb = document.getElementById('dnd-thumb');
     const track = document.getElementById('dnd-track');
     const status = document.getElementById('dnd-status');
-    const iconBg = document.getElementById('dnd-icon-bg');
+    const iconWrapper = document.getElementById('dnd-icon-wrapper');
 
     if(!thumb) return;
 
     if(window.isDnd) {
-        thumb.classList.add('translate-x-5');
+        thumb.classList.add('translate-x-4', 'bg-white');
+        thumb.classList.remove('bg-gray-400');
         track.classList.replace('bg-[#3f3f46]', 'bg-red-500');
-        status.innerText = "Tahan Notifikasi: ON";
-        status.classList.add('text-red-400');
-        iconBg.classList.replace('text-red-400', 'text-white');
-        iconBg.classList.replace('bg-red-500/10', 'bg-red-600');
+        status.innerText = "Notifications are OFF";
+        status.classList.replace('text-gray-500', 'text-red-400');
+        iconWrapper.classList.replace('text-gray-500', 'text-red-400');
     } else {
-        thumb.classList.remove('translate-x-5');
+        thumb.classList.remove('translate-x-4', 'bg-white');
+        thumb.classList.add('bg-gray-400');
         track.classList.replace('bg-red-500', 'bg-[#3f3f46]');
-        status.innerText = "Tahan Notifikasi: Off";
-        status.classList.remove('text-red-400');
-        iconBg.classList.replace('text-white', 'text-red-400');
-        iconBg.classList.replace('bg-red-600', 'bg-red-500/10');
+        status.innerText = "Notifications are ON";
+        status.classList.replace('text-red-400', 'text-gray-500');
+        iconWrapper.classList.replace('text-red-400', 'text-gray-500');
     }
 }
+
+/**
+ * Event listener to trigger snapshot update on tab switch
+ */
+window.addEventListener('tabSwitched', function(e) {
+    if (e.detail === 'home' && typeof window.updateDailySnapshot === 'function') {
+        window.updateDailySnapshot(); 
+    }
+});

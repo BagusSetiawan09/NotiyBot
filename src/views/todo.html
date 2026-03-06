@@ -7,9 +7,10 @@
 
 <div class="w-full">
     
-    <div class="flex space-x-1 bg-[#18181b] p-1 rounded-xl border border-[#3f3f46] mb-5 w-full max-w-[320px]">
+    <div class="flex space-x-1 bg-[#18181b] p-1 rounded-xl border border-[#3f3f46] mb-5 w-full max-w-[400px]">
         <button id="tab-todo" onclick="switchTodoTab('todo')" class="flex-1 py-1.5 text-sm font-medium rounded-lg bg-[#3f3f46] text-white shadow-sm transition-all duration-300">To-Do</button>
         <button id="tab-task" onclick="switchTodoTab('task')" class="flex-1 py-1.5 text-sm font-medium rounded-lg text-gray-400 hover:text-white transition-all duration-300">Task</button>
+        <button id="tab-focus" onclick="switchTodoTab('focus')" class="flex-1 py-1.5 text-sm font-medium rounded-lg text-gray-400 hover:text-white transition-all duration-300 text-blue-400">Focus</button>
         <button id="tab-history" onclick="switchTodoTab('history')" class="flex-1 py-1.5 text-sm font-medium rounded-lg text-gray-400 hover:text-white transition-all duration-300">History</button>
     </div>
 
@@ -40,8 +41,7 @@
             </div>
             <div>
                 <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 flex items-center gap-1 ml-1">
-                    <svg class="w-3 h-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Tenggat (Deadline)
+                    <svg class="w-3 h-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Tenggat (Deadline)
                 </label>
                 <input type="datetime-local" id="task-deadline" class="w-full bg-[#18181b] border border-[#3f3f46] rounded-lg px-4 py-2 text-sm text-gray-300 focus:outline-none focus:border-red-500 transition cursor-pointer" style="color-scheme: dark;">
             </div>
@@ -73,60 +73,79 @@
         </div>
     </div>
 
+    <div id="focus-container" class="hidden flex-col items-center justify-start pt-12 pb-6 w-full h-full transition-all duration-300 relative">
+        
+        <p class="text-blue-500 text-[10px] font-bold uppercase tracking-[0.2em] mb-10">Focus Mode</p>
+
+        <div class="relative w-64 h-64 mb-12 flex items-center justify-center">
+            <svg class="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="48" fill="none" stroke="#27272a" stroke-width="1.5"></circle>
+                <circle id="focus-progress-bar" cx="50" cy="50" r="48" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-dasharray="301.59" stroke-dashoffset="0" class="transition-all duration-1000 ease-linear"></circle>
+            </svg>
+            <div class="flex flex-col items-center justify-center z-10 mt-2">
+                <span id="focus-time-display" class="text-[3.5rem] font-medium text-white tracking-tight leading-none mb-2">25:00</span>
+                <span class="text-gray-400 text-xs font-medium">Stay focused</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-5 mb-10">
+            <button onclick="stopFocusTimer()" class="w-10 h-10 rounded-full bg-[#242427] hover:bg-[#3f3f46] text-gray-400 flex items-center justify-center transition border border-transparent hover:border-[#52525b]" title="Cancel / Reset">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <button onclick="toggleFocusTimer()" id="btn-focus-toggle" class="w-16 h-16 rounded-full bg-blue-500 hover:bg-blue-400 text-white flex items-center justify-center transition shadow-lg" title="Play / Pause">
+                <svg id="icon-focus-play" class="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"></path></svg>
+                <svg id="icon-focus-pause" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M5 4h3v12H5V4zm7 0h3v12h-3V4z"></path></svg>
+            </button>
+            <button onclick="skipFocusTimer()" class="w-10 h-10 rounded-full bg-[#242427] hover:bg-[#3f3f46] text-gray-400 flex items-center justify-center transition border border-transparent hover:border-[#52525b]" title="Skip">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>
+            </button>
+        </div>
+
+        <div class="bg-[#242427] rounded-2xl py-4 px-6 min-w-[260px] max-w-sm flex flex-col items-center justify-center mb-6">
+            <p class="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-1.5">Working On</p>
+            <h3 id="focus-task-title" class="text-sm font-semibold text-white text-center truncate w-full mb-3">Pilih Task dari menu</h3>
+            <div class="flex gap-1.5" id="focus-dots-container">
+                <div class="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_5px_rgba(59,130,246,0.6)]"></div>
+                <div class="w-1.5 h-1.5 rounded-full bg-[#3f3f46]"></div>
+            </div>
+        </div>
+
+        <button class="flex items-center gap-2 text-gray-500 hover:text-gray-300 transition text-xs font-medium bg-transparent border border-transparent px-3 py-1.5 rounded-lg">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" clip-rule="evenodd"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
+            No Sound
+            <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+
+        <div class="absolute top-2 right-2 flex items-center gap-1 opacity-0 hover:opacity-100 transition-opacity bg-[#242427] rounded-lg p-1">
+            <input type="number" id="focus-custom-time" value="25" min="1" max="120" class="w-10 bg-transparent text-gray-400 text-center text-xs outline-none" title="Set Menit">
+            <button onclick="setCustomFocusTime()" class="text-blue-500 hover:text-blue-400 text-[10px] font-bold px-2 py-1 rounded transition">SET</button>
+        </div>
+    </div>
+
     <div id="todo-list-container" class="space-y-3 pb-6"></div>
 </div>
 
 <div id="modal-task-detail" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] flex items-center justify-center p-6 opacity-0 pointer-events-none transition-all duration-300">
     <div class="bg-[#18181b] border border-[#3f3f46] w-full max-w-md rounded-[20px] shadow-2xl p-7 transform scale-95 transition-transform duration-300 relative" id="task-detail-content">
-        <button onclick="closeTaskDetail()" class="absolute top-5 right-5 text-gray-500 hover:text-white transition p-1 rounded-md hover:bg-[#3f3f46]">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-        </button>
-        
-        <div class="mb-4 flex items-center gap-2" id="detail-badge-container">
-            <div id="detail-priority-badge"></div>
-            <div id="detail-deadline-badge"></div>
-        </div>
-        
+        <button onclick="closeTaskDetail()" class="absolute top-5 right-5 text-gray-500 hover:text-white transition p-1 rounded-md hover:bg-[#3f3f46]"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+        <div class="mb-4 flex items-center gap-2" id="detail-badge-container"><div id="detail-priority-badge"></div><div id="detail-deadline-badge"></div></div>
         <h2 id="detail-title" class="text-xl font-bold text-white mb-5 leading-snug">Judul Task</h2>
-        
-        <div class="bg-[#242427] border border-[#3f3f46] rounded-xl p-4 mb-4">
-            <p class="text-[11px] text-gray-400 font-bold tracking-widest uppercase mb-1.5">Deskripsi</p>
-            <p id="detail-desc" class="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">Deskripsi tugas...</p>
-        </div>
-
+        <div class="bg-[#242427] border border-[#3f3f46] rounded-xl p-4 mb-4"><p class="text-[11px] text-gray-400 font-bold tracking-widest uppercase mb-1.5">Deskripsi</p><p id="detail-desc" class="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">Deskripsi tugas...</p></div>
         <div id="detail-file-container" class="hidden mb-2">
             <p class="text-[11px] text-gray-400 font-bold tracking-widest uppercase mb-1.5">Lampiran File</p>
-            
             <div id="detail-image-preview" class="hidden mb-3 w-full h-40 rounded-xl border border-[#3f3f46] overflow-hidden bg-[#18181b] relative group cursor-pointer">
                 <img id="detail-preview-img" src="" class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition duration-300">
-                <div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
-                    <span class="text-white text-sm font-bold tracking-widest flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg> 
-                        LIHAT PENUH
-                    </span>
-                </div>
+                <div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300"><span class="text-white text-sm font-bold tracking-widest flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg> LIHAT PENUH</span></div>
             </div>
-
             <button id="detail-file-btn" class="w-full flex items-center justify-between bg-[#242427] border border-[#3f3f46] hover:border-blue-500 hover:bg-[#2a2a2d] transition rounded-xl p-3 group shadow-sm">
-                <div class="flex items-center gap-3 overflow-hidden">
-                    <div class="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 flex-shrink-0 group-hover:scale-105 transition">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
-                    </div>
-                    <span id="detail-file-name" class="text-sm text-gray-200 font-medium truncate">nama-file.png</span>
-                </div>
-                <div class="flex items-center gap-1 text-xs font-semibold text-blue-400 opacity-0 group-hover:opacity-100 transition translate-x-2 group-hover:translate-x-0" id="detail-file-action-text">
-                    BUKA EKSTERNAL <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                </div>
+                <div class="flex items-center gap-3 overflow-hidden"><div class="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 flex-shrink-0 group-hover:scale-105 transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg></div><span id="detail-file-name" class="text-sm text-gray-200 font-medium truncate">nama-file.png</span></div>
+                <div class="flex items-center gap-1 text-xs font-semibold text-blue-400 opacity-0 group-hover:opacity-100 transition translate-x-2 group-hover:translate-x-0" id="detail-file-action-text">BUKA EKSTERNAL <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></div>
             </button>
         </div>
     </div>
 </div>
 
 <div id="modal-image-viewer" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[80] flex items-center justify-center p-6 opacity-0 pointer-events-none transition-all duration-300" onclick="closeImageViewer()">
-    
-    <button class="absolute top-6 right-6 z-50 text-gray-400 hover:text-white transition bg-[#27272a] hover:bg-[#3f3f46] rounded-full p-2.5 shadow-lg cursor-pointer" onclick="closeImageViewer()">
-        <svg class="w-6 h-6 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-    </button>
-    
+    <button class="absolute top-6 right-6 z-50 text-gray-400 hover:text-white transition bg-[#27272a] hover:bg-[#3f3f46] rounded-full p-2.5 shadow-lg cursor-pointer" onclick="closeImageViewer()"><svg class="w-6 h-6 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
     <img id="viewer-full-img" src="" class="max-w-full max-h-full rounded-lg shadow-2xl transform scale-95 transition-transform duration-300 object-contain" onclick="event.stopPropagation()">
 </div>

@@ -2,12 +2,14 @@ const { app, BrowserWindow, screen, ipcMain, Tray, Menu, nativeImage, dialog } =
 const path = require('path');
 const fs = require('fs');
 
+// Ensure single instance lock for the application
 const gotTheLock = app.requestSingleInstanceLock();
 
 if (!gotTheLock) {
   app.quit(); 
 } else {
   app.on('second-instance', (event, commandLine, workingDirectory) => {
+    // Focus the main window if a second instance is executed
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.show();
@@ -21,7 +23,11 @@ if (!gotTheLock) {
   let tray = null; 
 
   const configPath = path.join(app.getPath('userData'), 'notiybot-config.json');
-
+ 
+  /**
+   * Loads the application configuration from local storage.
+   * Returns default settings if the file does not exist.
+   */
   function loadConfig() {
       try {
           if (fs.existsSync(configPath)) {
@@ -29,16 +35,27 @@ if (!gotTheLock) {
               if (!config.customModes) config.customModes = []; 
               return config;
           }
-      } catch (error) { console.error("Gagal membaca config", error); }
+      } catch (error) { 
+          console.error("[Config] Failed to read configuration file:", error); 
+      }
       return { water: 45, stretch: 120, standbyPath: '', waterPath: '', stretchPath: '', restPath: '', customModes: [] }; 
   }
 
+  /**
+   * Saves the provided configuration object to local storage.
+   * @param {Object} settings - The configuration object to persist.
+   */
   function saveConfig(settings) {
       try {
           fs.writeFileSync(configPath, JSON.stringify(settings));
-      } catch (error) { console.error("Gagal menyimpan config", error); }
+      } catch (error) { 
+          console.error("[Config] Failed to save configuration file:", error); 
+      }
   }
 
+  /**
+   * Initializes and displays the main application window.
+   */
   function createWindow () {
     mainWindow = new BrowserWindow({
       width: 1050,
@@ -59,10 +76,13 @@ if (!gotTheLock) {
     mainWindow.setBackgroundColor('#00000000');
     mainWindow.loadFile(path.join(__dirname, 'src', 'index.html'));
 
+    // IPC Listeners for window controls
     ipcMain.on('window-minimize', () => mainWindow.minimize());
     ipcMain.on('window-maximize', () => mainWindow.isMaximized() ? mainWindow.unmaximize() : mainWindow.maximize());
     ipcMain.on('window-close', () => mainWindow.hide());
   }
+
+  // --- File Dialog & Configuration IPC Handlers ---
 
   ipcMain.on('open-file-dialog', (event, type) => {
       dialog.showOpenDialog(mainWindow, {
@@ -83,7 +103,7 @@ if (!gotTheLock) {
               saveConfig(config);
               event.reply('file-selected', { type, filePath });
           }
-      }).catch(err => console.log(err));
+      }).catch(err => console.error("[Dialog] File selection error:", err));
   });
 
   ipcMain.on('reset-file', (event, type) => {
@@ -122,13 +142,17 @@ if (!gotTheLock) {
       }
   });
 
+  /**
+   * Spawns a non-intrusive notification popup window.
+   * @param {string} message - The notification text to display.
+   * @param {string} type - The event type determining the background image.
+   */
   function showNotificationPopup(message, type) {
-      // TARIK DATA CONFIG
       const config = loadConfig();
       
-      // MODE SENYAP (DND)
+      // Prevent popup if Do Not Disturb (DND) mode is active
       if (config.dnd === true) {
-          console.log(`Notifikasi "${message}" ditahan karena Mode Senyap aktif!`);
+          console.log(`[Notification] Suppressed "${message}" due to active DND mode.`);
           return;
       }
 
@@ -192,6 +216,7 @@ if (!gotTheLock) {
         `);
       });
 
+      // Auto-destroy popup after 8 seconds
       setTimeout(() => {
         if (popupWindow && !popupWindow.isDestroyed()) {
             popupWindow.destroy();
@@ -200,11 +225,14 @@ if (!gotTheLock) {
       }, 8000);
   }
 
+  /**
+   * Initializes and manages all application background timers.
+   * @param {Object} settings - The current configuration object.
+   */
   function startTimers(settings) {
       activeTimers.forEach(timer => clearInterval(timer));
       activeTimers = [];
 
-      // Timer Interval
       if (settings.water > 0) {
           activeTimers.push(setInterval(() => showNotificationPopup("Waktunya minum bos!", "water"), settings.water * 60 * 1000));
       }
@@ -213,7 +241,6 @@ if (!gotTheLock) {
       }
 
       if (settings.customModes && settings.customModes.length > 0) {
-          
           settings.customModes.forEach(mode => {
               if (mode.scheduleType === 'interval' && mode.interval > 0) {
                   activeTimers.push(setInterval(() => showNotificationPopup(mode.name, mode.id), mode.interval * 60 * 1000));
@@ -259,8 +286,13 @@ if (!gotTheLock) {
       startTimers(newConfig); 
   });
 
+  // --- Application Lifecycle ---
+
   app.whenReady().then(() => {
     createWindow();
+
+    // Initialize the OS active window tracking module
+    startScreenTracking(mainWindow);
 
     const iconUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAzSURBVDhPY3hIQP+MgRjAAGJjA4wGBqMBjAYwGgCDGAaA8F//MxiIDzAaGGA0MBgNMDQAAGh1D9+5qE6MAAAAAElFTkSuQmCC';
     const icon = nativeImage.createFromDataURL(iconUrl);
@@ -289,4 +321,35 @@ if (!gotTheLock) {
   });
 
   app.on('window-all-closed', () => {});
+
+  // OS Active Window Tracker Module (Screen Time)
+  let trackingInterval;
+
+  /**
+   * Starts a background interval to poll the currently active OS window.
+   * Dispatches the window data payload to the main renderer process.
+   * @param {BrowserWindow} mainWindow - The target renderer window.
+   */
+  function startScreenTracking(mainWindow) {
+      if (trackingInterval) clearInterval(trackingInterval);
+
+      const POLLING_RATE_MS = 3000;
+
+      trackingInterval = setInterval(async () => {
+          try {
+              // Dynamically import active-win (ESM module)
+              const activeWinModule = await import('active-win');
+              const activeWin = activeWinModule.default || activeWinModule.activeWindow;
+              
+              const windowData = await activeWin();
+              
+              if (windowData && !mainWindow.isDestroyed()) {
+                  // Dispatch payload to frontend listener (screentime.js)
+                  mainWindow.webContents.send('os-window-update', windowData);
+              }
+          } catch (err) {
+              console.error("[Tracker] Failed to retrieve active window data. This may occur during OS boot or permission restriction.");
+          }
+      }, POLLING_RATE_MS);
+  }
 }

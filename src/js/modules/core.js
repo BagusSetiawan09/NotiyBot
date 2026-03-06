@@ -135,3 +135,39 @@ ipcRenderer.on('config-updated', (event, newConfig) => {
     }
     if(typeof window.updateClock === 'function') window.updateClock();
 });
+
+/**
+ * Toggles the visibility of the "More" navigation drawer.
+ */
+window.toggleNavDrawer = function() {
+    const drawer = document.getElementById('nav-drawer');
+    const btn = document.getElementById('btn-more-nav');
+    
+    if (drawer.classList.contains('opacity-0')) {
+        // Open drawer
+        drawer.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-3');
+        drawer.classList.add('translate-y-0');
+        btn.classList.add('bg-[#3f3f46]', 'text-white');
+    } else {
+        // Close drawer
+        drawer.classList.add('opacity-0', 'pointer-events-none', 'translate-y-3');
+        drawer.classList.remove('translate-y-0');
+        btn.classList.remove('bg-[#3f3f46]', 'text-white');
+    }
+};
+
+/**
+ * Global event listener to close the drawer when clicking outside of it.
+ */
+document.addEventListener('click', function(event) {
+    const drawer = document.getElementById('nav-drawer');
+    const btn = document.getElementById('btn-more-nav');
+    
+    if (drawer && !drawer.contains(event.target) && !btn.contains(event.target)) {
+        if (!drawer.classList.contains('opacity-0')) {
+            drawer.classList.add('opacity-0', 'pointer-events-none', 'translate-y-3');
+            drawer.classList.remove('translate-y-0');
+            btn.classList.remove('bg-[#3f3f46]', 'text-white');
+        }
+    }
+});
