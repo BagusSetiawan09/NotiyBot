@@ -1,81 +1,105 @@
-# 🚀 NotiyBot - Super Productivity & Focus Dashboard
+# NotiyBot - Ultimate Developer Productivity Dashboard
 
-![NotiyBot Banner](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)
 ![Electron.js](https://img.shields.io/badge/Electron.js-47848F?style=for-the-badge&logo=electron&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
 
-**NotiyBot** adalah solusi **Aplikasi Desktop Asisten Produktivitas** yang dirancang untuk membantu Anda tetap fokus, terhidrasi, dan sehat selama bekerja di depan komputer. Mulai dari manajemen waktu (Pomodoro), pelacakan air minum, hingga pengingat kustom interaktif.
+**NotiyBot** is an advanced, offline-first desktop application designed specifically for software engineers and digital professionals. It unifies task management, environment automation, habit tracking, and AI assistance into a single, cohesive interface built with a modern glassmorphism design language.
 
-Dibangun menggunakan teknologi **Electron.js** dan **Tailwind CSS**, sistem ini menawarkan performa ringan, notifikasi *real-time*, dan antarmuka (UI/UX) bergaya *Glassmorphism* yang modern, premium, serta memanjakan mata.
-
----
-
-## Fitur Utama & Modul
-
-Aplikasi ini mencakup berbagai modul produktivitas yang terintegrasi:
-
-### 1. Pomodoro Timer & Deep Work
-- **Sesi Fokus:** Manajemen waktu kerja (25 menit fokus, 5 menit istirahat).
-- **Interactive UI:** Progress bar melingkar, tombol Play/Pause/Reset yang mulus.
-- **Smart Notification:** Pop-up otomatis saat sesi fokus atau istirahat berakhir.
-
-### 2. Pelacak Kesehatan (Health Tracker)
-- **Water Tracker:** Catat target 8 gelas air harian secara manual dengan tombol interaktif.
-- **Stretch Reminder:** Pengingat otomatis untuk berdiri dan meregangkan badan setelah duduk terlalu lama.
-
-### 3. Pengingat Kustom (Custom Alarms)
-- **Mode Interval:** Notifikasi yang muncul berulang setiap beberapa menit (misal: tiap 60 menit).
-- **Mode Waktu Spesifik:** Alarm yang berbunyi tepat pada jam tertentu (misal: 22:00 WIB untuk waktu tidur).
-- **Personalisasi:** Pilih ikon (Heroicons) dan warna *badge* untuk setiap pengingat.
-
-### 4. Mode Senyap (Do Not Disturb)
-- **Quick Toggle:** Tombol *switch* ala iOS untuk menahan semua pop-up notifikasi saat Anda sedang *meeting* atau butuh fokus penuh, tanpa menghapus pengaturan timer.
-
-### 5. Personalisasi Animasi (Face Customization)
-- **Ubah Wajah Notifikasi:** Ganti animasi pop-up *default* dengan gambar, GIF, atau SVG milik Anda sendiri.
-- **Reset Instan:** Kembalikan animasi ke versi Tabbie CSS *original* hanya dengan satu klik.
+Powered by **Electron.js** and **Tailwind CSS**, NotiyBot operates efficiently with minimal system resources while providing real-time data tracking, API integrations, and an uncompromising focus on deep work.
 
 ---
 
-## Teknologi (Tech Stack)
+## Core Modules & Features
+
+The application is architected into eight distinct modules to handle every aspect of your daily productivity cycle:
+
+### 1. Task Management & Daily Targets
+A comprehensive task management system structured into four main views: To-Do, Task, Focus, and History.
+- **Smart Input:** Seamlessly add daily targets and track their completion status.
+- **AI Task Analysis:** Automatically assigns priorities and scheduled times based on conversational inputs from the AI Assistant.
+
+### 2. Focus & Health Tracker
+A dedicated environment for deep work sessions.
+- **Pomodoro Timer:** Configurable focus sessions (e.g., 25 minutes) with smooth, interactive progress indicators.
+- **Hydration & Health:** Built-in trackers for daily water intake and standing/stretching intervals.
+- **Do Not Disturb Mode:** A quick toggle to suppress all system notifications during critical focus periods.
+
+### 3. Habits & GitHub Activity
+Bridge the gap between personal routines and professional development.
+- **Daily Routines:** An interactive grid system to track and maintain streaks for daily habits (e.g., Reading, Exercise, Ideation).
+- **Real-Time GitHub Dashboard:** Integrates via GitHub REST API to securely render an authentic, dark-mode contribution heatmap and a dynamic activity overview of your repositories directly within the app.
+
+### 4. Screen Time Analytics
+Monitor your digital consumption to prevent burnout.
+- **Live Tracking:** Records application usage dynamically.
+- **Visual Insights:** Features detailed daily timelines showing exact application usage (e.g., VS Code, Chrome) and weekly real-time graphs for analytical review.
+
+### 5. Think (AI Assistant & Zen Scratchpad)
+A dual-pane knowledge and ideation hub.
+- **Context-Aware AI Chat:** Powered by Google Gemini (Fast, Reasoning, and Pro models). Capable of processing text, voice, and visual inputs.
+- **Zen Scratchpad:** A distraction-free, rich-text editor that slides in via a split-view panel. Features auto-markdown formatting, table generation, and real-time auto-save capabilities.
+
+### 6. Calendar & Timeline
+Visual scheduling for strict deadline management.
+- **Interactive Timeline:** View scheduled tasks mapped across specific hours of the day to visualize your upcoming workload efficiently.
+
+### 7. Workspaces (1-Click Automation)
+Eliminate the repetitive setup process of your development environments.
+- **Automated Bootstrapping:** Configure custom workspaces by defining the Project Folder Path, Local Server executable (e.g., XAMPP), Terminal Commands (e.g., `php artisan serve`), and Live Browser URLs.
+- **One-Click Launch:** Boot your entire development stack simultaneously with a single click.
+
+### 8. Custom Notifications & Timers
+Highly personalized alert systems.
+- **Interval & Specific Timers:** Set recurring reminders or exact alarms.
+- **Face Customization:** Replace default notification animations with custom images, GIFs, or SVGs to personalize your workspace alerts.
+
+---
+
+## Tech Stack
 
 * **Core Framework:** Electron.js
-* **Frontend:** HTML5, CSS3, Vanilla JavaScript
-* **Styling:** Tailwind CSS (via CDN)
-* **Typography:** Plus Jakarta Sans (Google Fonts)
-* **Icons:** Heroicons
+* **Frontend Architecture:** HTML5, CSS3, Vanilla JavaScript
+* **Styling:** Tailwind CSS
+* **Typography:** Plus Jakarta Sans
+* **Data Persistence:** LocalStorage (Privacy-first, offline capable)
+* **External APIs:** Google Gemini API, GitHub REST API
 
 ---
 
-## Persyaratan Sistem (Requirements)
+## System Requirements
 
-Pastikan komputer Anda memenuhi spesifikasi berikut:
-* OS: Windows 10/11, macOS, atau Linux
-* Node.js (Disarankan versi LTS terbaru)
+* OS: Windows 10/11, macOS, or Linux
+* Node.js (Latest LTS version recommended)
 * NPM (Node Package Manager)
 
 ---
 
-## Panduan Instalasi (Quick Start)
+## Quick Start & Installation
 
-Salin dan jalankan perintah berikut di terminal Anda secara berurutan untuk menjalankan proyek ini di komputer lokal:
+Clone the repository and install the dependencies to run the application locally:
 
 ```bash
-# 1. Clone Repositori
+# 1. Clone the repository
 git clone [https://github.com/BagusSetiawan09/NotiyBot.git](https://github.com/BagusSetiawan09/NotiyBot.git)
 cd NotiyBot
 
-# 2. Install Dependencies (Wajib)
-# Perintah ini akan mengunduh folder node_modules yang dibutuhkan mesin
+# 2. Install dependencies
 npm install
 
-# 3. Jalankan Aplikasi
+# 3. Launch the application
 npm start
 ```
 
-## Dukung Proyek Ini (Support & Donation)
+## Configuration Note
+- **AI Integration:** Navigate to the Think module and input your Gemini API Key in the settings modal.
+-- **GitHub Heatmap:** Navigate to the Habits & Activity module settings and input your GitHub Username and a Personal Access Token (PAT) to fetch private repository data.
 
-Proyek ini 100% *Open Source*. Jika aplikasi ini membantu meningkatkan produktivitas Anda, Anda bisa mendukung pengembangan fitur selanjutnya (To-Do List, AI Think, Habit Tracker) dengan mentraktir saya kopi:
+---
+
+## Support & Contribution
+
+NotiyBot is an open-source initiative. If this application enhances your productivity, consider supporting the continuous development of future features:
 
 [![Trakteer](https://img.shields.io/badge/Traktir_Kopi_di-Trakteer-E12A3E?style=for-the-badge&logo=ko-fi&logoColor=white)](https://teer.id/BagusSetiawan90)

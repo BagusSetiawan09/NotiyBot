@@ -627,3 +627,292 @@ window.autoCreateTask = function(title, time, priority, aiNotes) {
     
     if(typeof window.renderTasks === 'function') window.renderTasks();
 }
+
+/**
+ * Zen Scratchpad Module
+ * Handles rich text editing, local storage synchronization, dynamic table insertion,
+ * and markdown-style shortcuts within a contenteditable context.
+ */
+
+window.toggleZenDrawer = function() {
+    const drawer = document.getElementById('drawer-zen-notes');
+    const aiView = document.getElementById('ai-view-container');
+    if (!drawer) return;
+
+    const isDesktop = window.innerWidth > 768;
+
+    if (drawer.classList.contains('translate-x-full')) {
+        drawer.classList.remove('translate-x-full');
+        drawer.classList.add('translate-x-0');
+        if(aiView && isDesktop) aiView.style.width = 'calc(100% - 465px)';
+        window.loadZenNotes(); 
+    } else {
+        drawer.classList.add('translate-x-full');
+        drawer.classList.remove('translate-x-0');
+        if(aiView) aiView.style.width = '100%';
+    }
+}
+
+/**
+ * Executes standard Document.execCommand for rich text formatting.
+ */
+window.formatZen = function(command, value = null) {
+    document.execCommand(command, false, value);
+    document.getElementById('zen-notes-input').focus();
+    triggerZenSave();
+}
+
+/**
+ * Custom dialog implementation for inserting hyperlinks.
+ * Bypasses native prompt() restrictions in Electron environments.
+ */
+window.insertZenLink = function() {
+    const selection = window.getSelection();
+    
+    if (selection.rangeCount === 0 || selection.toString().trim() === "") {
+        if(window.showToast) window.showToast("Please select text to create a link.", "warning");
+        return; 
+    }
+    
+    const range = selection.getRangeAt(0);
+    const overlay = document.createElement('div');
+    overlay.className = 'fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-opacity duration-200';
+    overlay.innerHTML = `
+        <div class="bg-[#18181b] border border-[#3f3f46] rounded-xl shadow-2xl p-6 w-full max-w-sm transform scale-95 transition-transform duration-200" id="zen-link-box">
+            <h3 class="text-white font-bold mb-1 text-sm flex items-center gap-2">
+                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                Insert Link
+            </h3>
+            <p class="text-[11px] text-gray-500 mb-4">Enter URL for the selected text.</p>
+            <input type="url" id="zen-custom-url" placeholder="https://..." class="w-full bg-[#242427] border border-[#3f3f46] rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500 mb-5" value="https://">
+            <div class="flex justify-end gap-2">
+                <button id="zen-link-cancel" class="px-4 py-2 text-xs font-bold text-gray-400 hover:text-white transition">Cancel</button>
+                <button id="zen-link-save" class="px-4 py-2 text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition shadow-md">Apply Link</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    requestAnimationFrame(() => {
+        overlay.classList.remove('opacity-0');
+        document.getElementById('zen-link-box').classList.remove('scale-95');
+        const inputUrl = document.getElementById('zen-custom-url');
+        inputUrl.focus();
+        inputUrl.setSelectionRange(8, 8); 
+    });
+
+    const closePrompt = () => {
+        overlay.classList.add('opacity-0');
+        document.getElementById('zen-link-box').classList.add('scale-95');
+        setTimeout(() => overlay.remove(), 200);
+    };
+
+    document.getElementById('zen-link-cancel').onclick = closePrompt;
+    
+    document.getElementById('zen-link-save').onclick = () => {
+        const url = document.getElementById('zen-custom-url').value.trim();
+        if (url && url !== "https://") {
+            const editor = document.getElementById('zen-notes-input');
+            
+            editor.focus();
+            selection.removeAllRanges();
+            selection.addRange(range);
+
+            document.execCommand('createLink', false, url);
+            
+            const links = editor.getElementsByTagName('a');
+            for (let i = 0; i < links.length; i++) {
+                if (links[i].getAttribute('href') === url) {
+                    links[i].target = "_blank";
+                    links[i].className = "text-blue-400 underline hover:text-blue-300";
+                    links[i].title = "Ctrl + Click to open link";
+                }
+            }
+            triggerZenSave();
+            if(window.showToast) window.showToast("Link applied successfully.", "success");
+        }
+        closePrompt();
+    };
+}
+
+/**
+ * Context-aware table insertion.
+ * Appends a new row if the cursor is inside an existing table, 
+ * otherwise generates a new default table.
+ */
+window.insertZenTable = function() {
+    const editor = document.getElementById('zen-notes-input');
+    const selection = window.getSelection();
+    
+    if (!selection.rangeCount) editor.focus();
+    
+    let currentNode = selection.anchorNode;
+    
+    if (currentNode && currentNode.nodeType === 3) {
+        currentNode = currentNode.parentNode;
+    }
+
+    let tableEl = currentNode ? currentNode.closest('table') : null;
+
+    if (tableEl) {
+        const tbody = tableEl.querySelector('tbody') || tableEl;
+        const firstRow = tableEl.querySelector('tr');
+        
+        let colCount = firstRow ? firstRow.children.length : 2;
+
+        const newRow = document.createElement('tr');
+        for (let i = 0; i < colCount; i++) {
+            const newCell = document.createElement('td');
+            newCell.innerHTML = 'Data ' + (i + 1);
+            newCell.style.border = "1px solid #3f3f46";
+            newCell.style.padding = "8px 12px";
+            newCell.style.backgroundColor = "rgba(24, 24, 27, 0.5)";
+            newRow.appendChild(newCell);
+        }
+        tbody.appendChild(newRow);
+        
+    } else {
+        const tableHTML = `
+            <br>
+            <table style="width: 100%; border-collapse: collapse; margin: 1em 0; border: 1px solid #3f3f46;">
+                <tbody>
+                    <tr>
+                        <th style="border: 1px solid #3f3f46; padding: 8px 12px; background-color: #27272a; color: white; font-weight: bold; text-align: left;">Header 1</th>
+                        <th style="border: 1px solid #3f3f46; padding: 8px 12px; background-color: #27272a; color: white; font-weight: bold; text-align: left;">Header 2</th>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #3f3f46; padding: 8px 12px; background-color: rgba(24, 24, 27, 0.5);">Data 1</td>
+                        <td style="border: 1px solid #3f3f46; padding: 8px 12px; background-color: rgba(24, 24, 27, 0.5);">Data 2</td>
+                    </tr>
+                </tbody>
+            </table>
+            <br>
+        `;
+        document.execCommand('insertHTML', false, tableHTML);
+    }
+    
+    editor.focus();
+    triggerZenSave();
+}
+
+/**
+ * Debounced local storage synchronization to prevent performance degradation.
+ */
+let zenSaveTimeout;
+function triggerZenSave() {
+    const editor = document.getElementById('zen-notes-input');
+    const status = document.getElementById('zen-save-status');
+    if (!editor) return;
+
+    clearTimeout(zenSaveTimeout);
+    if(status) {
+        status.innerHTML = `<svg class="w-3 h-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Saving...`;
+        status.classList.remove('opacity-0');
+        status.classList.replace('text-green-400', 'text-gray-400');
+    }
+    
+    zenSaveTimeout = setTimeout(() => {
+        localStorage.setItem('notiybot_zen_notes', editor.innerHTML);
+        if(status) {
+            status.innerHTML = `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg> Saved`;
+            status.classList.replace('text-gray-400', 'text-green-400');
+            setTimeout(() => status.classList.add('opacity-0'), 2000);
+        }
+    }, 800);
+}
+
+/**
+ * Main initialization process for Zen Scratchpad.
+ * Attaches event listeners for formatting, storage, and interaction handling.
+ */
+window.initZenNotes = function() {
+    const editor = document.getElementById('zen-notes-input');
+    if (!editor) return;
+    
+    editor.addEventListener('input', triggerZenSave);
+
+    // Markdown list auto-formatting handler
+    editor.addEventListener('keyup', function(e) {
+        if (e.key === ' ' || e.code === 'Space') {
+            const sel = window.getSelection();
+            if (!sel.anchorNode) return;
+            
+            if (sel.anchorNode.nodeType === 3) {
+                const text = sel.anchorNode.textContent;
+                
+                if (text === '- ' || text === '* ') {
+                    document.execCommand('delete', false); 
+                    document.execCommand('delete', false); 
+                    document.execCommand('insertUnorderedList', false, null);
+                } 
+                else if (text === '1. ') {
+                    document.execCommand('delete', false); 
+                    document.execCommand('delete', false); 
+                    document.execCommand('delete', false); 
+                    document.execCommand('insertOrderedList', false, null);
+                }
+            }
+        }
+    });
+
+    // Electron shell integration for external links
+    editor.addEventListener('click', function(e) {
+        const link = e.target.closest('a');
+        if (link && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault(); 
+            const url = link.getAttribute('href');
+            if (url) {
+                try {
+                    require('electron').shell.openExternal(url);
+                } catch(err) {
+                    window.open(url, '_blank');
+                }
+            }
+        }
+    });
+
+    // Dynamic cursor state handler for modifier keys
+    editor.addEventListener('mousemove', function(e) {
+        const link = e.target.closest('a');
+        if (link) {
+            if (e.ctrlKey || e.metaKey) {
+                link.style.cursor = 'pointer';
+            } else {
+                link.style.cursor = 'text';
+            }
+        }
+    });
+}
+
+window.loadZenNotes = function() {
+    const editor = document.getElementById('zen-notes-input');
+    if(editor) {
+        let savedData = localStorage.getItem('notiybot_zen_notes') || "";
+        if(savedData && !savedData.includes('<') && !savedData.includes('>')) {
+            savedData = savedData.replace(/\n/g, '<br>');
+        }
+        editor.innerHTML = savedData;
+        editor.focus();
+    }
+}
+
+window.clearZenNotes = function() {
+    if(confirm("Clear all data in the scratchpad? This action cannot be undone.")) {
+        localStorage.removeItem('notiybot_zen_notes');
+        const editor = document.getElementById('zen-notes-input');
+        if(editor) editor.innerHTML = "";
+    }
+}
+
+window.copyZenNotes = function() {
+    const editor = document.getElementById('zen-notes-input');
+    if(editor && editor.innerText.trim() !== "") {
+        navigator.clipboard.writeText(editor.innerText).then(() => {
+            if(window.showToast) window.showToast("Notes copied to clipboard.", "success");
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    window.initZenNotes();
+});
