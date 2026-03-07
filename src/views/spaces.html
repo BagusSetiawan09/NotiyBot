@@ -5,67 +5,89 @@
             <h1 class="text-3xl font-bold tracking-tight text-white mb-1">Workspaces</h1>
             <p class="text-gray-400 text-sm font-medium">Launch your projects, tasks & folders together</p>
         </div>
-        <button onclick="createNewSpace()" class="bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm px-4 py-2.5 rounded-xl transition shadow-[0_0_15px_rgba(59,130,246,0.3)] flex items-center gap-2">
+        <button onclick="createNewSpace()" class="bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm px-4 py-2.5 rounded-lg transition flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
             New Workspace
         </button>
     </header>
 
     <div class="bg-[#242427] border border-[#3f3f46] rounded-2xl p-2.5 mb-6 flex gap-2 overflow-x-auto custom-scrollbar mx-2" id="spaces-nav-container">
-        </div>
+    </div>
 
     <div id="active-space-container" class="flex-1 flex flex-col mx-2 relative">
-        </div>
+    </div>
 
 </div>
 
 <div id="modal-create-space" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
-    <div class="bg-[#141417] border border-[#3f3f46] w-full max-w-[440px] rounded-[24px] shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden transform scale-95 transition-transform duration-300 relative flex flex-col" id="space-modal-content">
-        <div class="px-6 py-5 border-b border-[#3f3f46]/50 flex items-center justify-between bg-[#18181b]">
+    <div class="bg-[#141417] border border-[#3f3f46] w-full max-w-[500px] max-h-[90vh] rounded-[24px] shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden transform scale-95 transition-transform duration-300 relative flex flex-col" id="space-modal-content">
+        <div class="px-6 py-5 border-b border-[#3f3f46]/50 flex items-center justify-between bg-[#18181b] flex-shrink-0">
             <h2 class="text-base font-bold text-white flex items-center gap-3 tracking-wide">
-                <div class="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20">
+                <div class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                 </div>
                 <span id="space-modal-title-text">Create Workspace</span>
             </h2>
-            <button onclick="closeSpaceModal()" class="text-gray-500 hover:text-white transition p-2 rounded-xl hover:bg-[#27272a]">
+            <button onclick="closeSpaceModal()" class="text-gray-500 hover:text-white transition p-2 rounded-lg hover:bg-[#27272a]">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
         </div>
-        <div class="p-6 space-y-5">
+        
+        <div class="p-6 space-y-5 overflow-y-auto custom-scrollbar">
             <div>
                 <label class="text-[11px] font-bold text-gray-400 mb-2 block uppercase tracking-widest">Workspace Name</label>
-                <input type="text" id="space-name-input" placeholder="e.g., Digital Expert Project" class="w-full bg-[#18181b] border border-[#3f3f46] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition placeholder-gray-600 shadow-inner">
+                <input type="text" id="space-name-input" placeholder="e.g., Portfolio Laravel" class="w-full bg-[#18181b] border border-[#3f3f46] rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition placeholder-gray-600">
             </div>
-            <div>
-                <label class="text-[11px] font-bold text-gray-400 mb-2 block uppercase tracking-widest">Description <span class="text-gray-600 font-normal normal-case tracking-normal ml-1">(Optional)</span></label>
-                <textarea id="space-desc-input" rows="2" placeholder="What is this workspace for?" class="w-full bg-[#18181b] border border-[#3f3f46] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition resize-none placeholder-gray-600 shadow-inner"></textarea>
+            
+            <div class="bg-[#18181b] border border-[#3f3f46] p-4 rounded-xl space-y-4">
+                <div class="flex items-center gap-2 mb-2">
+                    <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    <h3 class="text-xs font-bold text-white uppercase tracking-widest">1-Click Automation Setup</h3>
+                </div>
+                
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 mb-1.5 block uppercase tracking-wider">Project Folder Path</label>
+                    <input type="text" id="space-folder-input" placeholder="e.g., D:\Projects\Portfolio" class="w-full bg-[#242427] border border-[#3f3f46] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 transition placeholder-gray-600">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 mb-1.5 block uppercase tracking-wider">Local Server / XAMPP Path <span class="text-gray-600 normal-case tracking-normal">(Optional)</span></label>
+                    <input type="text" id="space-xampp-input" placeholder="e.g., C:\xampp\xampp-control.exe" class="w-full bg-[#242427] border border-[#3f3f46] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 transition placeholder-gray-600">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 mb-1.5 block uppercase tracking-wider">Terminal Server Command</label>
+                    <input type="text" id="space-cmd-input" placeholder="e.g., php artisan serve" class="w-full bg-[#242427] border border-[#3f3f46] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 transition placeholder-gray-600 font-mono">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 mb-1.5 block uppercase tracking-wider">Live Browser URL</label>
+                    <input type="text" id="space-url-input" placeholder="e.g., http://localhost:8000" class="w-full bg-[#242427] border border-[#3f3f46] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 transition placeholder-gray-600">
+                </div>
             </div>
+
             <div class="grid grid-cols-2 gap-5">
                 <div>
                     <label class="text-[11px] font-bold text-gray-400 mb-2 block uppercase tracking-widest">Theme Color</label>
                     <div class="flex items-center gap-2.5 mt-1">
-                        <label class="cursor-pointer group relative flex items-center justify-center"><input type="radio" name="space_color" value="text-blue-400" class="peer sr-only" checked><div class="w-7 h-7 rounded-full bg-blue-500 border-2 border-[#141417] ring-1 ring-[#3f3f46] peer-checked:ring-blue-500 peer-checked:scale-110 transition-all shadow-sm"></div><svg class="w-3.5 h-3.5 text-white absolute opacity-0 peer-checked:opacity-100 transition-opacity drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></label>
-                        <label class="cursor-pointer group relative flex items-center justify-center"><input type="radio" name="space_color" value="text-purple-400" class="peer sr-only"><div class="w-7 h-7 rounded-full bg-purple-500 border-2 border-[#141417] ring-1 ring-[#3f3f46] peer-checked:ring-purple-500 peer-checked:scale-110 transition-all shadow-sm"></div><svg class="w-3.5 h-3.5 text-white absolute opacity-0 peer-checked:opacity-100 transition-opacity drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></label>
-                        <label class="cursor-pointer group relative flex items-center justify-center"><input type="radio" name="space_color" value="text-green-400" class="peer sr-only"><div class="w-7 h-7 rounded-full bg-green-500 border-2 border-[#141417] ring-1 ring-[#3f3f46] peer-checked:ring-green-500 peer-checked:scale-110 transition-all shadow-sm"></div><svg class="w-3.5 h-3.5 text-white absolute opacity-0 peer-checked:opacity-100 transition-opacity drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></label>
-                        <label class="cursor-pointer group relative flex items-center justify-center"><input type="radio" name="space_color" value="text-orange-400" class="peer sr-only"><div class="w-7 h-7 rounded-full bg-orange-500 border-2 border-[#141417] ring-1 ring-[#3f3f46] peer-checked:ring-orange-500 peer-checked:scale-110 transition-all shadow-sm"></div><svg class="w-3.5 h-3.5 text-white absolute opacity-0 peer-checked:opacity-100 transition-opacity drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></label>
-                        <label class="cursor-pointer group relative flex items-center justify-center"><input type="radio" name="space_color" value="text-red-400" class="peer sr-only"><div class="w-7 h-7 rounded-full bg-red-500 border-2 border-[#141417] ring-1 ring-[#3f3f46] peer-checked:ring-red-500 peer-checked:scale-110 transition-all shadow-sm"></div><svg class="w-3.5 h-3.5 text-white absolute opacity-0 peer-checked:opacity-100 transition-opacity drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></label>
+                        <label class="cursor-pointer group relative flex items-center justify-center"><input type="radio" name="space_color" value="text-blue-400" class="peer sr-only" checked><div class="w-7 h-7 rounded-full bg-blue-500 border-2 border-[#141417] ring-1 ring-[#3f3f46] peer-checked:ring-blue-500 peer-checked:scale-110 transition-all"></div></label>
+                        <label class="cursor-pointer group relative flex items-center justify-center"><input type="radio" name="space_color" value="text-purple-400" class="peer sr-only"><div class="w-7 h-7 rounded-full bg-purple-500 border-2 border-[#141417] ring-1 ring-[#3f3f46] peer-checked:ring-purple-500 peer-checked:scale-110 transition-all"></div></label>
+                        <label class="cursor-pointer group relative flex items-center justify-center"><input type="radio" name="space_color" value="text-green-400" class="peer sr-only"><div class="w-7 h-7 rounded-full bg-green-500 border-2 border-[#141417] ring-1 ring-[#3f3f46] peer-checked:ring-green-500 peer-checked:scale-110 transition-all"></div></label>
+                        <label class="cursor-pointer group relative flex items-center justify-center"><input type="radio" name="space_color" value="text-orange-400" class="peer sr-only"><div class="w-7 h-7 rounded-full bg-orange-500 border-2 border-[#141417] ring-1 ring-[#3f3f46] peer-checked:ring-orange-500 peer-checked:scale-110 transition-all"></div></label>
                     </div>
                 </div>
                 <div>
-                    <label class="text-[11px] font-bold text-gray-400 mb-2 block uppercase tracking-widest">Workspace Icon</label>
-                    <div class="grid grid-cols-4 gap-1 bg-[#18181b] border border-[#3f3f46] rounded-xl p-1 mt-1">
-                        <label class="cursor-pointer text-center relative" title="Folder"><input type="radio" name="space_icon" value="folder" class="peer sr-only" checked><div class="py-1.5 rounded-lg text-gray-500 peer-checked:bg-[#27272a] peer-checked:text-white transition-all flex items-center justify-center hover:text-gray-300"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg></div></label>
-                        <label class="cursor-pointer text-center relative" title="Code"><input type="radio" name="space_icon" value="code" class="peer sr-only"><div class="py-1.5 rounded-lg text-gray-500 peer-checked:bg-[#27272a] peer-checked:text-white transition-all flex items-center justify-center hover:text-gray-300"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg></div></label>
-                        <label class="cursor-pointer text-center relative" title="Design"><input type="radio" name="space_icon" value="design" class="peer sr-only"><div class="py-1.5 rounded-lg text-gray-500 peer-checked:bg-[#27272a] peer-checked:text-white transition-all flex items-center justify-center hover:text-gray-300"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg></div></label>
-                        <label class="cursor-pointer text-center relative" title="Business"><input type="radio" name="space_icon" value="briefcase" class="peer sr-only"><div class="py-1.5 rounded-lg text-gray-500 peer-checked:bg-[#27272a] peer-checked:text-white transition-all flex items-center justify-center hover:text-gray-300"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg></div></label>
+                    <label class="text-[11px] font-bold text-gray-400 mb-2 block uppercase tracking-widest">Icon</label>
+                    <div class="grid grid-cols-4 gap-1 bg-[#18181b] border border-[#3f3f46] rounded-lg p-1 mt-1">
+                        <label class="cursor-pointer text-center relative" title="Folder"><input type="radio" name="space_icon" value="folder" class="peer sr-only" checked><div class="py-1.5 rounded-md text-gray-500 peer-checked:bg-[#27272a] peer-checked:text-white transition-all flex items-center justify-center hover:text-gray-300"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg></div></label>
+                        <label class="cursor-pointer text-center relative" title="Code"><input type="radio" name="space_icon" value="code" class="peer sr-only"><div class="py-1.5 rounded-md text-gray-500 peer-checked:bg-[#27272a] peer-checked:text-white transition-all flex items-center justify-center hover:text-gray-300"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg></div></label>
+                        <label class="cursor-pointer text-center relative" title="Design"><input type="radio" name="space_icon" value="design" class="peer sr-only"><div class="py-1.5 rounded-md text-gray-500 peer-checked:bg-[#27272a] peer-checked:text-white transition-all flex items-center justify-center hover:text-gray-300"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg></div></label>
+                        <label class="cursor-pointer text-center relative" title="Business"><input type="radio" name="space_icon" value="briefcase" class="peer sr-only"><div class="py-1.5 rounded-md text-gray-500 peer-checked:bg-[#27272a] peer-checked:text-white transition-all flex items-center justify-center hover:text-gray-300"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg></div></label>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="px-6 py-5 border-t border-[#3f3f46]/50 bg-[#18181b] flex gap-3">
-            <button onclick="closeSpaceModal()" class="flex-1 px-4 py-2.5 text-sm font-bold text-gray-300 bg-[#27272a] border border-[#3f3f46] hover:bg-[#3f3f46] hover:text-white transition rounded-xl">Cancel</button>
-            <button onclick="submitNewSpace()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition shadow-[0_4px_15px_rgba(59,130,246,0.3)] flex items-center justify-center gap-2">
+        
+        <div class="px-6 py-5 border-t border-[#3f3f46]/50 bg-[#18181b] flex gap-3 flex-shrink-0">
+            <button onclick="closeSpaceModal()" class="flex-1 px-4 py-2.5 text-sm font-bold text-gray-300 bg-[#27272a] border border-[#3f3f46] hover:bg-[#3f3f46] hover:text-white transition rounded-lg">Cancel</button>
+            <button onclick="submitNewSpace()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2">
                 <span id="space-modal-submit-text">Create Space</span>
             </button>
         </div>
@@ -76,37 +98,37 @@
     <div class="bg-[#141417] border border-[#3f3f46] w-full max-w-[400px] rounded-[24px] shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden transform scale-95 transition-transform duration-300 relative flex flex-col" id="item-modal-content">
         <div class="px-6 py-5 border-b border-[#3f3f46]/50 flex items-center justify-between bg-[#18181b]">
             <h2 class="text-base font-bold text-white flex items-center gap-3 tracking-wide">
-                <div class="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20">
+                <div class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                 </div>
                 <span id="item-modal-title-text">Add New Item</span>
             </h2>
-            <button onclick="closeAddItemModal()" class="text-gray-500 hover:text-white transition p-2 rounded-xl hover:bg-[#27272a]">
+            <button onclick="closeAddItemModal()" class="text-gray-500 hover:text-white transition p-2 rounded-lg hover:bg-[#27272a]">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
         </div>
         <div class="p-6 space-y-5">
             <div>
                 <label class="text-[11px] font-bold text-gray-400 mb-2 block uppercase tracking-widest">Item Name</label>
-                <input type="text" id="item-name-input" placeholder="e.g., Figma Design, VS Code..." class="w-full bg-[#18181b] border border-[#3f3f46] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition placeholder-gray-600 shadow-inner">
+                <input type="text" id="item-name-input" placeholder="e.g., Figma Design, VS Code..." class="w-full bg-[#18181b] border border-[#3f3f46] rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition placeholder-gray-600">
             </div>
             <div>
                 <label class="text-[11px] font-bold text-gray-400 mb-2 block uppercase tracking-widest">Item Type</label>
-                <div class="grid grid-cols-4 gap-1 bg-[#18181b] border border-[#3f3f46] rounded-xl p-1 mt-1">
-                    <label class="cursor-pointer text-center relative" title="URL / Web Link"><input type="radio" name="item_type" value="URL" class="peer sr-only" checked><div class="py-1.5 rounded-lg text-[10px] font-bold tracking-widest text-gray-500 peer-checked:bg-[#27272a] peer-checked:text-white transition-all flex items-center justify-center hover:text-gray-300 uppercase">URL</div></label>
-                    <label class="cursor-pointer text-center relative" title="Application"><input type="radio" name="item_type" value="APP" class="peer sr-only"><div class="py-1.5 rounded-lg text-[10px] font-bold tracking-widest text-gray-500 peer-checked:bg-[#27272a] peer-checked:text-white transition-all flex items-center justify-center hover:text-gray-300 uppercase">APP</div></label>
-                    <label class="cursor-pointer text-center relative" title="Local Folder"><input type="radio" name="item_type" value="FOLDER" class="peer sr-only"><div class="py-1.5 rounded-lg text-[10px] font-bold tracking-widest text-gray-500 peer-checked:bg-[#27272a] peer-checked:text-white transition-all flex items-center justify-center hover:text-gray-300 uppercase">FOLDER</div></label>
-                    <label class="cursor-pointer text-center relative" title="Task / Note"><input type="radio" name="item_type" value="TASK" class="peer sr-only"><div class="py-1.5 rounded-lg text-[10px] font-bold tracking-widest text-gray-500 peer-checked:bg-[#27272a] peer-checked:text-white transition-all flex items-center justify-center hover:text-gray-300 uppercase">TASK</div></label>
+                <div class="grid grid-cols-4 gap-1 bg-[#18181b] border border-[#3f3f46] rounded-lg p-1 mt-1">
+                    <label class="cursor-pointer text-center relative" title="URL / Web Link"><input type="radio" name="item_type" value="URL" class="peer sr-only" checked><div class="py-1.5 rounded-md text-[10px] font-bold tracking-widest text-gray-500 peer-checked:bg-[#27272a] peer-checked:text-white transition-all flex items-center justify-center hover:text-gray-300 uppercase">URL</div></label>
+                    <label class="cursor-pointer text-center relative" title="Application"><input type="radio" name="item_type" value="APP" class="peer sr-only"><div class="py-1.5 rounded-md text-[10px] font-bold tracking-widest text-gray-500 peer-checked:bg-[#27272a] peer-checked:text-white transition-all flex items-center justify-center hover:text-gray-300 uppercase">APP</div></label>
+                    <label class="cursor-pointer text-center relative" title="Local Folder"><input type="radio" name="item_type" value="FOLDER" class="peer sr-only"><div class="py-1.5 rounded-md text-[10px] font-bold tracking-widest text-gray-500 peer-checked:bg-[#27272a] peer-checked:text-white transition-all flex items-center justify-center hover:text-gray-300 uppercase">FOLDER</div></label>
+                    <label class="cursor-pointer text-center relative" title="Task / Note"><input type="radio" name="item_type" value="TASK" class="peer sr-only"><div class="py-1.5 rounded-md text-[10px] font-bold tracking-widest text-gray-500 peer-checked:bg-[#27272a] peer-checked:text-white transition-all flex items-center justify-center hover:text-gray-300 uppercase">TASK</div></label>
                 </div>
             </div>
             <div>
                 <label class="text-[11px] font-bold text-gray-400 mb-2 block uppercase tracking-widest">Target Path / Link</label>
-                <input type="text" id="item-target-input" placeholder="https://... or C:\Projects\..." class="w-full bg-[#18181b] border border-[#3f3f46] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition placeholder-gray-600 shadow-inner">
+                <input type="text" id="item-target-input" placeholder="https://... or C:\Projects\..." class="w-full bg-[#18181b] border border-[#3f3f46] rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition placeholder-gray-600">
             </div>
         </div>
         <div class="px-6 py-5 border-t border-[#3f3f46]/50 bg-[#18181b] flex gap-3">
-            <button onclick="closeAddItemModal()" class="flex-1 px-4 py-2.5 text-sm font-bold text-gray-300 bg-[#27272a] border border-[#3f3f46] hover:bg-[#3f3f46] hover:text-white transition rounded-xl">Cancel</button>
-            <button onclick="submitNewItem()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition shadow-[0_4px_15px_rgba(59,130,246,0.3)] flex items-center justify-center gap-2">
+            <button onclick="closeAddItemModal()" class="flex-1 px-4 py-2.5 text-sm font-bold text-gray-300 bg-[#27272a] border border-[#3f3f46] hover:bg-[#3f3f46] hover:text-white transition rounded-lg">Cancel</button>
+            <button onclick="submitNewItem()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2">
                 <span id="item-modal-submit-text">Save Item</span>
             </button>
         </div>
@@ -117,14 +139,14 @@
     <div class="bg-[#141417] border border-[#3f3f46] w-full max-w-[400px] rounded-[24px] shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden transform scale-95 transition-transform duration-300 relative flex flex-col" id="item-detail-content">
         <div class="px-6 py-5 border-b border-[#3f3f46]/50 flex items-center justify-between bg-[#18181b]">
             <h2 class="text-base font-bold text-white flex items-center gap-2 tracking-wide">Item Details</h2>
-            <button onclick="closeItemDetailModal()" class="text-gray-500 hover:text-white transition p-2 rounded-xl hover:bg-[#27272a]">
+            <button onclick="closeItemDetailModal()" class="text-gray-500 hover:text-white transition p-2 rounded-lg hover:bg-[#27272a]">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
         </div>
         <div class="p-6">
             <div class="flex items-center gap-4 mb-5">
-                <div id="detail-view-icon" class="w-14 h-14 rounded-2xl bg-[#18181b] border border-[#3f3f46] flex items-center justify-center text-blue-400">
-                    </div>
+                <div id="detail-view-icon" class="w-14 h-14 rounded-xl bg-[#18181b] border border-[#3f3f46] flex items-center justify-center text-blue-400">
+                </div>
                 <div class="flex-1 overflow-hidden">
                     <h3 id="detail-view-name" class="text-lg font-bold text-white truncate">Item Name</h3>
                     <span id="detail-view-type" class="text-[10px] font-bold text-gray-500 tracking-widest uppercase bg-[#27272a] px-2 py-0.5 rounded-md mt-1 inline-block">TYPE</span>
@@ -136,13 +158,13 @@
             </div>
         </div>
         <div class="px-6 py-5 border-t border-[#3f3f46]/50 bg-[#18181b] flex gap-3">
-            <button onclick="triggerItemDelete()" class="w-11 h-11 flex items-center justify-center text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/50 rounded-xl transition flex-shrink-0" title="Delete Item">
+            <button onclick="triggerItemDelete()" class="w-11 h-11 flex items-center justify-center text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/50 rounded-lg transition flex-shrink-0" title="Delete Item">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
             </button>
-            <button onclick="triggerItemEdit()" class="flex-1 px-4 text-sm font-bold text-gray-300 bg-[#27272a] border border-[#3f3f46] hover:bg-[#3f3f46] hover:text-white transition rounded-xl flex items-center justify-center gap-2">
+            <button onclick="triggerItemEdit()" class="flex-1 px-4 text-sm font-bold text-gray-300 bg-[#27272a] border border-[#3f3f46] hover:bg-[#3f3f46] hover:text-white transition rounded-lg flex items-center justify-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg> Edit
             </button>
-            <button onclick="launchCurrentItem()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white px-4 rounded-xl text-sm font-bold transition shadow-[0_4px_15px_rgba(59,130,246,0.3)] flex items-center justify-center gap-2">
+            <button onclick="launchCurrentItem()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white px-4 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2">
                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg> Launch
             </button>
         </div>
@@ -157,8 +179,8 @@
         <h3 class="text-lg font-bold text-white mb-2">Delete this Item?</h3>
         <p class="text-sm text-gray-400 mb-6">This action cannot be undone. Are you completely sure?</p>
         <div class="flex gap-3">
-            <button onclick="closeConfirmDeleteModal()" class="flex-1 px-4 py-3 text-sm font-bold text-gray-300 bg-[#27272a] border border-[#3f3f46] hover:bg-[#3f3f46] transition rounded-xl">Cancel</button>
-            <button onclick="executeItemDeletion()" class="flex-1 bg-red-600 hover:bg-red-500 text-white px-4 py-3 rounded-xl text-sm font-bold transition shadow-[0_4px_15px_rgba(239,68,68,0.3)]">Yes, Delete</button>
+            <button onclick="closeConfirmDeleteModal()" class="flex-1 px-4 py-3 text-sm font-bold text-gray-300 bg-[#27272a] border border-[#3f3f46] hover:bg-[#3f3f46] transition rounded-lg">Cancel</button>
+            <button onclick="executeItemDeletion()" class="flex-1 bg-red-600 hover:bg-red-500 text-white px-4 py-3 rounded-lg text-sm font-bold transition">Yes, Delete</button>
         </div>
     </div>
 </div>

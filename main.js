@@ -286,6 +286,50 @@ if (!gotTheLock) {
       startTimers(newConfig); 
   });
 
+  // Workspace Automation Execution Engine (Spaces)
+  ipcMain.on('launch-workspace', (event, spaceData) => {
+      const { folderPath, terminalCmd, liveUrl, items } = spaceData;
+      const { shell } = require('electron');
+      const { exec } = require('child_process');
+
+      console.log(`[Workspace Engine] Initiating launch protocol for: ${spaceData.name}`);
+
+      // 1. Launch VS Code pointing directly to the project folder
+      if (folderPath && folderPath.trim() !== "") {
+          exec(`code "${folderPath}"`, (error) => {
+              if (error) console.error("[Workspace Engine] Failed to open VS Code:", error);
+          });
+      }
+
+      // 2. Spawn an independent command prompt executing the dev server script
+      if (folderPath && terminalCmd && terminalCmd.trim() !== "") {
+          const commandString = `start cmd.exe /k "cd /d "${folderPath}" && ${terminalCmd}"`;
+          exec(commandString, (error) => {
+              if (error) console.error("[Workspace Engine] Failed to execute terminal command:", error);
+          });
+      }
+
+      // 3. Delay execution of the browser URL to allow the local server time to boot
+      if (liveUrl && liveUrl.trim() !== "") {
+          setTimeout(() => {
+              shell.openExternal(liveUrl).catch(err => console.error("[Workspace Engine] URL Launch Failed:", err));
+          }, 2500); // 2.5 seconds buffer time
+      }
+
+      // 4. Iterate and launch all individually configured sub-items (Figma, Notion, PDFs, etc.)
+      if (items && Array.isArray(items) && items.length > 0) {
+          items.forEach(item => {
+              if (!item.url || item.url.trim() === "") return;
+              
+              if (item.type === 'URL') {
+                  shell.openExternal(item.url);
+              } else if (item.type === 'APP' || item.type === 'FOLDER') {
+                  shell.openPath(item.url);
+              }
+          });
+      }
+  });
+
   // --- Application Lifecycle ---
 
   app.whenReady().then(() => {

@@ -1,116 +1,174 @@
 <div class="flex flex-col h-full w-full fade-in pb-10 relative px-2">
     
-    <header class="flex justify-between items-center mb-6 mt-2">
+    <header class="flex justify-between items-end mb-6 mt-2">
         <div>
-            <h1 class="text-3xl font-bold tracking-tight text-white mb-1">Habits</h1>
-            <p class="text-gray-400 text-sm font-medium flex items-center gap-2">
+            <h1 class="text-3xl font-bold tracking-tight text-white mb-1">Habits & Activity</h1>
+            <p class="text-gray-400 text-sm font-medium flex items-center gap-2" id="header-subtitle">
                 <span id="habit-header-stats">0/0 done today</span>
                 <span class="w-1 h-1 bg-gray-500 rounded-full"></span>
                 <span id="habit-header-active">0 active</span>
             </p>
         </div>
-        <button onclick="openHabitModal()" class="w-12 h-12 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl transition shadow-[0_0_15px_rgba(59,130,246,0.3)] flex items-center justify-center hover:scale-105" title="New Habit">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-        </button>
+        
+        <div class="flex bg-[#18181b] p-1 rounded-lg border border-[#3f3f46]">
+            <button id="tab-habits" onclick="switchHabitTab('habits')" class="px-4 py-1.5 text-sm font-bold rounded-md bg-blue-600 text-white shadow-sm transition-all duration-300">Habits</button>
+            <button id="tab-github" onclick="switchHabitTab('github')" class="px-4 py-1.5 text-sm font-bold rounded-md text-gray-400 hover:text-white transition-all duration-300 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                GitHub
+            </button>
+        </div>
     </header>
 
-    <div id="habits-action-container" class="space-y-3 mb-8">
+    <div id="habits-view-container" class="flex-col w-full flex transition-opacity duration-300">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-white font-bold text-sm tracking-wide px-1">Pending Today</h3>
+            <button onclick="openHabitModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold text-xs transition flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                New Habit
+            </button>
         </div>
-
-    <div class="flex-1 flex flex-col">
-        <div class="flex justify-between items-center mb-4 px-1">
-            <button class="w-8 h-8 flex items-center justify-center rounded-xl bg-[#242427] hover:bg-[#3f3f46] text-gray-400 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button>
-            <h3 class="text-white font-bold text-sm tracking-wide">This Week</h3>
-            <button class="w-8 h-8 flex items-center justify-center rounded-xl bg-[#242427] hover:bg-[#3f3f46] text-gray-400 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
-        </div>
-
-        <div class="bg-[#18181b] border border-[#3f3f46] rounded-2xl p-5 overflow-x-auto custom-scrollbar">
-            <div class="flex justify-between items-center mb-3">
-                <div class="w-1/3 text-xs font-bold text-gray-500 uppercase tracking-widest pl-2">Habit</div>
-                <div class="flex gap-2" id="weekly-days-header">
-                    </div>
+        <div id="habits-action-container" class="space-y-3 mb-8"></div>
+        <div class="flex-1 flex flex-col">
+            <div class="flex justify-between items-center mb-4 px-1">
+                <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-[#242427] hover:bg-[#3f3f46] text-gray-400 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button>
+                <h3 class="text-white font-bold text-sm tracking-wide">Daily Routines</h3>
+                <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-[#242427] hover:bg-[#3f3f46] text-gray-400 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
             </div>
-            
-            <div id="habits-grid-container" class="space-y-1">
+            <div class="bg-[#18181b] border border-[#3f3f46] rounded-lg p-5 overflow-x-auto custom-scrollbar">
+                <div class="flex justify-between items-center mb-3">
+                    <div class="w-1/3 text-xs font-bold text-gray-500 uppercase tracking-widest pl-2">Habit</div>
+                    <div class="flex gap-2" id="weekly-days-header"></div>
                 </div>
+                <div id="habits-grid-container" class="space-y-1"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="github-view-container" class="flex-col h-full w-full hidden transition-opacity duration-300">
+        
+        <div class="bg-[#0d1117] border border-[#30363d] rounded-xl p-5 mb-6 relative w-full flex flex-col shadow-sm">
+            <div class="flex justify-between items-center mb-2">
+                <div class="flex items-center gap-3">
+                    <h3 class="text-[#c9d1d9] text-sm tracking-normal font-medium" id="gh-contrib-text">Contribution Heatmap</h3>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="openGitHubConfig()" class="text-xs text-[#8b949e] hover:text-[#c9d1d9] transition bg-[#242427] px-3 py-1.5 rounded-md border border-[#30363d] flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> Settings
+                    </button>
+                    <button onclick="refreshGitHubGrid()" class="text-[#8b949e] hover:text-[#c9d1d9] transition p-1.5 rounded-md hover:bg-[#30363d]" title="Sync Data">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="w-full overflow-x-auto custom-scrollbar flex items-start" id="github-grid-container">
+                <div class="w-full h-[120px] flex flex-col justify-center items-center text-center">
+                    <p class="text-xs font-bold tracking-widest text-[#8b949e] mb-2">NOT CONFIGURED YET</p>
+                    <button onclick="openGitHubConfig()" class="text-blue-500 text-xs hover:underline">Click here to setup API</button>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center mt-2 mb-4 text-[10px] text-[#8b949e]">
+                <span class="hover:text-[#58a6ff] cursor-pointer transition">Learn how we count contributions</span>
+                <div class="flex items-center gap-1">
+                    <span class="mr-1">Less</span>
+                    <div class="w-2.5 h-2.5 rounded-[2px] bg-[#161b22] border border-[#ffffff0d]"></div>
+                    <div class="w-2.5 h-2.5 rounded-[2px] bg-[#0e4429] border border-[#ffffff0d]"></div>
+                    <div class="w-2.5 h-2.5 rounded-[2px] bg-[#006d32] border border-[#ffffff0d]"></div>
+                    <div class="w-2.5 h-2.5 rounded-[2px] bg-[#26a641] border border-[#ffffff0d]"></div>
+                    <div class="w-2.5 h-2.5 rounded-[2px] bg-[#39d353] border border-[#ffffff0d]"></div>
+                    <span class="ml-1">More</span>
+                </div>
+            </div>
+
+            <div class="mt-4 border-t border-[#30363d] pt-6 flex flex-col md:flex-row gap-6" id="gh-dynamic-overview">
+                </div>
+        </div>
+
+        <div class="mt-2 px-2 pb-4">
+            <h4 class="text-[#c9d1d9] text-[15px] font-medium mb-6">Recent contribution activity (90 Days)</h4>
+            <div id="gh-dynamic-activity-list">
+                </div>
+            <button class="w-full py-2.5 mt-4 rounded-lg border border-[#30363d] text-[#58a6ff] text-[13px] font-bold hover:bg-[#30363d]/30 transition">Show more activity on GitHub</button>
+        </div>
+
+    </div>
+</div>
+
+<div id="modal-github-config" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[120] flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+    <div class="bg-[#141417] border border-[#3f3f46] w-full max-w-[420px] rounded-[24px] overflow-hidden transform scale-95 transition-transform duration-300 relative flex flex-col" id="github-config-content">
+        <div class="px-6 py-5 border-b border-[#3f3f46]/50 flex items-center justify-between bg-[#18181b]">
+            <h2 class="text-base font-bold text-white flex items-center gap-3 tracking-wide">
+                <div class="w-8 h-8 rounded-lg bg-[#242427] border border-[#3f3f46] flex items-center justify-center text-white">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                </div>
+                GitHub Integration
+            </h2>
+            <button onclick="closeGitHubConfig()" class="text-gray-500 hover:text-white transition p-2 rounded-lg hover:bg-[#27272a]">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <div class="p-6 space-y-5">
+            <div>
+                <label class="text-[11px] font-bold text-gray-400 mb-2 block uppercase tracking-widest">GitHub Username</label>
+                <input type="text" id="gh-username-input" placeholder="e.g., BagusSetiawan09" class="w-full bg-[#18181b] border border-[#3f3f46] rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-green-500 transition">
+            </div>
+            <div>
+                <label class="text-[11px] font-bold text-gray-400 mb-2 block uppercase tracking-widest flex justify-between">
+                    <span>Personal Access Token (PAT)</span>
+                    <a href="https://github.com/settings/tokens" target="_blank" class="text-blue-500 hover:underline normal-case tracking-normal">Get Token</a>
+                </label>
+                <input type="password" id="gh-token-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx (Optional for public)" class="w-full bg-[#18181b] border border-[#3f3f46] rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-green-500 transition">
+                <p class="text-[10px] text-gray-500 mt-2 leading-relaxed">Token is required to fetch detailed private activity and bypass API limits. Leave blank to only show public data.</p>
+            </div>
+        </div>
+        <div class="px-6 py-5 border-t border-[#3f3f46]/50 bg-[#18181b] flex justify-end gap-3">
+            <button onclick="closeGitHubConfig()" class="px-5 py-2.5 text-sm font-bold text-gray-300 bg-[#27272a] border border-[#3f3f46] hover:bg-[#3f3f46] transition rounded-lg">Cancel</button>
+            <button onclick="saveGitHubConfig()" class="bg-[#2ea043] hover:bg-[#2c974b] text-white px-6 py-2.5 rounded-lg text-sm font-bold transition shadow-md">Save Config</button>
         </div>
     </div>
 </div>
 
 <div id="modal-create-habit" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
-    <div class="bg-[#141417] border border-[#3f3f46] w-full max-w-[420px] rounded-[24px] shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden transform scale-95 transition-transform duration-300 relative flex flex-col" id="habit-modal-content">
-        
+    <div class="bg-[#141417] border border-[#3f3f46] w-full max-w-[420px] rounded-[24px] overflow-hidden transform scale-95 transition-transform duration-300 relative flex flex-col" id="habit-modal-content">
         <div class="px-6 py-5 border-b border-[#3f3f46]/50 flex items-center justify-between bg-[#18181b]">
             <h2 class="text-base font-bold text-white flex items-center gap-3 tracking-wide">
-                <div class="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-                </div>
+                <div class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg></div>
                 Create New Habit
             </h2>
-            <button onclick="closeHabitModal()" class="text-gray-500 hover:text-white transition p-2 rounded-xl hover:bg-[#27272a]">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
+            <button onclick="closeHabitModal()" class="text-gray-500 hover:text-white transition p-2 rounded-lg hover:bg-[#27272a]"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
         </div>
-        
         <div class="p-6 space-y-5">
             <div>
                 <label class="text-[11px] font-bold text-gray-400 mb-2 block uppercase tracking-widest">Habit Name</label>
-                <input type="text" id="habit-name-input" placeholder="e.g., Drink water, Take vitamins..." class="w-full bg-[#18181b] border border-[#3f3f46] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition placeholder-gray-600 shadow-inner">
+                <input type="text" id="habit-name-input" placeholder="e.g., Drink water, Take vitamins..." class="w-full bg-[#18181b] border border-[#3f3f46] rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500">
             </div>
-            
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="text-[11px] font-bold text-gray-400 mb-2 block uppercase tracking-widest">Color</label>
                     <div class="flex gap-2">
-                        <label class="cursor-pointer group"><input type="radio" name="habit_color" value="blue" class="peer sr-only" checked><div class="w-6 h-6 rounded-full bg-blue-500 border-2 border-[#18181b] ring-1 ring-[#3f3f46] peer-checked:ring-blue-500 peer-checked:scale-110 transition-all"></div></label>
-                        <label class="cursor-pointer group"><input type="radio" name="habit_color" value="red" class="peer sr-only"><div class="w-6 h-6 rounded-full bg-red-500 border-2 border-[#18181b] ring-1 ring-[#3f3f46] peer-checked:ring-red-500 peer-checked:scale-110 transition-all"></div></label>
-                        <label class="cursor-pointer group"><input type="radio" name="habit_color" value="orange" class="peer sr-only"><div class="w-6 h-6 rounded-full bg-orange-500 border-2 border-[#18181b] ring-1 ring-[#3f3f46] peer-checked:ring-orange-500 peer-checked:scale-110 transition-all"></div></label>
-                        <label class="cursor-pointer group"><input type="radio" name="habit_color" value="purple" class="peer sr-only"><div class="w-6 h-6 rounded-full bg-purple-500 border-2 border-[#18181b] ring-1 ring-[#3f3f46] peer-checked:ring-purple-500 peer-checked:scale-110 transition-all"></div></label>
-                        <label class="cursor-pointer group"><input type="radio" name="habit_color" value="teal" class="peer sr-only"><div class="w-6 h-6 rounded-full bg-teal-500 border-2 border-[#18181b] ring-1 ring-[#3f3f46] peer-checked:ring-teal-500 peer-checked:scale-110 transition-all"></div></label>
+                        <label class="cursor-pointer group"><input type="radio" name="habit_color" value="blue" class="peer sr-only" checked><div class="w-6 h-6 rounded-full bg-blue-500 border-2 border-[#18181b] ring-1 ring-[#3f3f46] peer-checked:ring-blue-500 peer-checked:scale-110"></div></label>
+                        <label class="cursor-pointer group"><input type="radio" name="habit_color" value="red" class="peer sr-only"><div class="w-6 h-6 rounded-full bg-red-500 border-2 border-[#18181b] ring-1 ring-[#3f3f46] peer-checked:ring-red-500 peer-checked:scale-110"></div></label>
+                        <label class="cursor-pointer group"><input type="radio" name="habit_color" value="orange" class="peer sr-only"><div class="w-6 h-6 rounded-full bg-orange-500 border-2 border-[#18181b] ring-1 ring-[#3f3f46] peer-checked:ring-orange-500 peer-checked:scale-110"></div></label>
+                        <label class="cursor-pointer group"><input type="radio" name="habit_color" value="purple" class="peer sr-only"><div class="w-6 h-6 rounded-full bg-purple-500 border-2 border-[#18181b] ring-1 ring-[#3f3f46] peer-checked:ring-purple-500 peer-checked:scale-110"></div></label>
+                        <label class="cursor-pointer group"><input type="radio" name="habit_color" value="teal" class="peer sr-only"><div class="w-6 h-6 rounded-full bg-teal-500 border-2 border-[#18181b] ring-1 ring-[#3f3f46] peer-checked:ring-teal-500 peer-checked:scale-110"></div></label>
                     </div>
                 </div>
-                
                 <div>
                     <label class="text-[11px] font-bold text-gray-400 mb-2 block uppercase tracking-widest">Icon</label>
-                    <div class="grid grid-cols-5 gap-1 bg-[#18181b] border border-[#3f3f46] rounded-xl p-1">
-                        <label class="cursor-pointer text-center relative" title="Water">
-                            <input type="radio" name="habit_icon" value="water" class="peer sr-only" checked>
-                            <div class="py-1.5 rounded-lg text-gray-500 peer-checked:bg-[#27272a] peer-checked:text-white transition-all flex items-center justify-center hover:text-gray-300">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3c.538 0 1.053.25 1.385.674l5.36 6.84c1.472 1.88 1.472 4.606 0 6.486a5 5 0 01-7.745 0c-1.472-1.88-1.472-4.606 0-6.486l5.36-6.84A1.751 1.751 0 0112 3z"></path></svg>
-                            </div>
-                        </label>
-                        <label class="cursor-pointer text-center relative" title="Vitamins/Pill">
-                            <input type="radio" name="habit_icon" value="pill" class="peer sr-only">
-                            <div class="py-1.5 rounded-lg text-gray-500 peer-checked:bg-[#27272a] peer-checked:text-white transition-all flex items-center justify-center hover:text-gray-300">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
-                            </div>
-                        </label>
-                        <label class="cursor-pointer text-center relative" title="Exercise">
-                            <input type="radio" name="habit_icon" value="dumbbell" class="peer sr-only">
-                            <div class="py-1.5 rounded-lg text-gray-500 peer-checked:bg-[#27272a] peer-checked:text-white transition-all flex items-center justify-center hover:text-gray-300">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path></svg>
-                            </div>
-                        </label>
-                        <label class="cursor-pointer text-center relative" title="Read">
-                            <input type="radio" name="habit_icon" value="book" class="peer sr-only">
-                            <div class="py-1.5 rounded-lg text-gray-500 peer-checked:bg-[#27272a] peer-checked:text-white transition-all flex items-center justify-center hover:text-gray-300">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                            </div>
-                        </label>
-                        <label class="cursor-pointer text-center relative" title="Meditate">
-                            <input type="radio" name="habit_icon" value="brain" class="peer sr-only">
-                            <div class="py-1.5 rounded-lg text-gray-500 peer-checked:bg-[#27272a] peer-checked:text-white transition-all flex items-center justify-center hover:text-gray-300">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
-                            </div>
-                        </label>
+                    <div class="grid grid-cols-5 gap-1 bg-[#18181b] border border-[#3f3f46] rounded-lg p-1">
+                        <label class="cursor-pointer text-center relative" title="Water"><input type="radio" name="habit_icon" value="water" class="peer sr-only" checked><div class="py-1.5 rounded-md text-gray-500 peer-checked:bg-[#27272a] peer-checked:text-white transition-all flex items-center justify-center hover:text-gray-300"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3c.538 0 1.053.25 1.385.674l5.36 6.84c1.472 1.88 1.472 4.606 0 6.486a5 5 0 01-7.745 0c-1.472-1.88-1.472-4.606 0-6.486l5.36-6.84A1.751 1.751 0 0112 3z"></path></svg></div></label>
+                        <label class="cursor-pointer text-center relative" title="Vitamins/Pill"><input type="radio" name="habit_icon" value="pill" class="peer sr-only"><div class="py-1.5 rounded-md text-gray-500 peer-checked:bg-[#27272a] peer-checked:text-white transition-all flex items-center justify-center hover:text-gray-300"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg></div></label>
+                        <label class="cursor-pointer text-center relative" title="Exercise"><input type="radio" name="habit_icon" value="dumbbell" class="peer sr-only"><div class="py-1.5 rounded-md text-gray-500 peer-checked:bg-[#27272a] peer-checked:text-white transition-all flex items-center justify-center hover:text-gray-300"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path></svg></div></label>
+                        <label class="cursor-pointer text-center relative" title="Read"><input type="radio" name="habit_icon" value="book" class="peer sr-only"><div class="py-1.5 rounded-md text-gray-500 peer-checked:bg-[#27272a] peer-checked:text-white transition-all flex items-center justify-center hover:text-gray-300"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg></div></label>
+                        <label class="cursor-pointer text-center relative" title="Meditate"><input type="radio" name="habit_icon" value="brain" class="peer sr-only"><div class="py-1.5 rounded-md text-gray-500 peer-checked:bg-[#27272a] peer-checked:text-white transition-all flex items-center justify-center hover:text-gray-300"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg></div></label>
                     </div>
                 </div>
             </div>
         </div>
-        
         <div class="px-6 py-5 border-t border-[#3f3f46]/50 bg-[#18181b] flex justify-end gap-3">
-            <button onclick="closeHabitModal()" class="px-5 py-2.5 text-sm font-bold text-gray-300 bg-[#27272a] border border-[#3f3f46] hover:bg-[#3f3f46] transition rounded-xl">Cancel</button>
-            <button onclick="submitNewHabit()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition shadow-[0_4px_15px_rgba(59,130,246,0.3)]">Add Habit</button>
+            <button onclick="closeHabitModal()" class="px-5 py-2.5 text-sm font-bold text-gray-300 bg-[#27272a] border border-[#3f3f46] hover:bg-[#3f3f46] transition rounded-lg">Cancel</button>
+            <button onclick="submitNewHabit()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg text-sm font-bold transition">Add Habit</button>
         </div>
     </div>
 </div>

@@ -1,13 +1,13 @@
 /**
  * @fileoverview Enterprise Workspace Management Module
- * Handles workspaces, nested items, robust CRUD logic, and safety modals.
+ * Handles workspace automation (including local server pre-launch), complex nested data, and CRUD operations.
  */
 
 let rawSpaces = localStorage.getItem('notiybot_spaces');
 window.workspaces = [];
 window.editingSpaceId = null; 
 
-// Item Context State
+// Context State
 window.activeItemSpaceId = null;
 window.activeItemIndex = null;
 window.isEditingItem = false;
@@ -22,7 +22,7 @@ try {
 
 window.activeWorkspaceId = window.workspaces.length > 0 ? window.workspaces[0].id : null;
 
-/** Helper function to get SVG based on item type */
+/** Helper function to map SVG based on item type */
 function getItemSvg(type) {
     switch(type) {
         case 'APP': return `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>`;
@@ -60,10 +60,9 @@ function renderSpacesNav() {
         const iconColor = isActive ? 'text-blue-400' : space.color;
         
         navContainer.innerHTML += `
-            <button onclick="switchWorkspace('${space.id}')" class="flex items-center gap-2 px-4 py-2 rounded-xl border transition-all whitespace-nowrap ${bgClass}">
+            <button onclick="switchWorkspace('${space.id}')" class="flex items-center gap-2 px-4 py-2 rounded-lg border transition-all whitespace-nowrap ${bgClass}">
                 <span class="${iconColor}">${space.icon}</span>
                 <span class="font-bold text-sm tracking-wide">${space.name}</span>
-                <span class="bg-[#18181b] text-gray-400 text-[10px] font-bold px-1.5 py-0.5 rounded-md ml-1 opacity-60">${space.items ? space.items.length : 0}</span>
             </button>
         `;
     });
@@ -76,12 +75,12 @@ function renderActiveSpace() {
     if (window.workspaces.length === 0) {
         container.innerHTML = `
             <div class="flex flex-col items-center justify-center h-full text-center mt-12 fade-in">
-                <div class="w-20 h-20 bg-[#242427] rounded-full flex items-center justify-center text-gray-600 mb-6 border border-[#3f3f46] shadow-inner">
+                <div class="w-20 h-20 bg-[#242427] rounded-full flex items-center justify-center text-gray-600 mb-6 border border-[#3f3f46]">
                     <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                 </div>
                 <h2 class="text-2xl font-bold text-white tracking-tight mb-2">No Workspaces Yet</h2>
                 <p class="text-gray-400 text-sm max-w-sm mb-8 leading-relaxed">Create your first workspace to start organizing your projects, tasks, and native resources.</p>
-                <button onclick="createNewSpace()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm px-6 py-3 rounded-xl transition shadow-[0_10px_20px_-10px_rgba(59,130,246,0.6)] flex items-center gap-2 hover:scale-105 transform duration-200">
+                <button onclick="createNewSpace()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm px-6 py-3 rounded-lg transition flex items-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                     Create First Workspace
                 </button>
@@ -93,21 +92,40 @@ function renderActiveSpace() {
     const space = window.workspaces.find(s => s.id === window.activeWorkspaceId);
     if (!space) return;
 
-    container.innerHTML = `
-        <div class="flex justify-between items-center mb-6">
-            <div class="flex items-center gap-3">
-                <h2 class="text-2xl font-bold text-white tracking-tight" id="active-space-title">${space.name}</h2>
-                <span class="bg-[#3f3f46] text-gray-300 text-[10px] font-bold px-2 py-1 rounded-md tracking-wider uppercase">Active</span>
+    let autoInfoHtml = "";
+    if (space.folderPath || space.terminalCmd || space.liveUrl || space.xamppPath) {
+        autoInfoHtml = `
+            <div class="flex flex-wrap gap-4 text-xs font-mono text-gray-500 mb-6 px-1">
+                ${space.xamppPath ? `<span class="flex items-center gap-1 text-orange-400/80" title="Local Server Engine"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg> Local Server Configured</span>` : ''}
+                ${space.folderPath ? `<span class="flex items-center gap-1" title="Root Directory"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg> Path Configured</span>` : ''}
+                ${space.terminalCmd ? `<span class="flex items-center gap-1" title="Terminal Process"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> Cmd Configured</span>` : ''}
+                ${space.liveUrl ? `<span class="flex items-center gap-1" title="Live Server"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg> URL Configured</span>` : ''}
             </div>
+        `;
+    }
+
+    container.innerHTML = `
+        <div class="flex justify-between items-start mb-2">
+            <div class="flex flex-col">
+                <div class="flex items-center gap-3">
+                    <h2 class="text-3xl font-bold text-white tracking-tight" id="active-space-title">${space.name}</h2>
+                </div>
+            </div>
+            
             <div class="flex items-center gap-2">
-                <button onclick="editWorkspace('${space.id}')" class="w-9 h-9 flex items-center justify-center rounded-xl bg-[#242427] hover:bg-[#3f3f46] border border-[#3f3f46] text-gray-400 hover:text-white transition" title="Edit Workspace"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
-                <button onclick="deleteWorkspace('${space.id}')" class="w-9 h-9 flex items-center justify-center rounded-xl bg-[#242427] hover:bg-red-500/20 border border-[#3f3f46] text-red-400 hover:text-red-500 hover:border-red-500/50 transition" title="Delete Workspace"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                <button onclick="launchFullWorkspace('${space.id}')" class="px-5 py-2 flex items-center justify-center rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-regular text-sm transition mr-2" title="Launch Everything Automatically">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> Launch Workspace
+                </button>
+                
+                <button onclick="editWorkspace('${space.id}')" class="w-10 h-10 flex items-center justify-center rounded-lg bg-[#242427] hover:bg-[#3f3f46] border border-[#3f3f46] text-gray-400 hover:text-white transition" title="Edit Workspace"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                <button onclick="deleteWorkspace('${space.id}')" class="w-10 h-10 flex items-center justify-center rounded-lg bg-[#242427] hover:bg-red-500/20 border border-[#3f3f46] text-red-400 hover:text-red-500 hover:border-red-500/50 transition" title="Delete Workspace"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
             </div>
         </div>
-        <p class="text-sm text-gray-400 mb-6" id="active-space-desc">${space.description || 'No description provided.'}</p>
+        
+        ${autoInfoHtml}
 
         <div>
-            <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">ITEMS (<span id="active-space-items-count">${space.items ? space.items.length : 0}</span>)</h3>
+            <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">RESOURCES / ITEMS (<span id="active-space-items-count">${space.items ? space.items.length : 0}</span>)</h3>
             <div class="grid grid-cols-2 lg:grid-cols-3 gap-4" id="space-items-grid"></div>
         </div>
     `;
@@ -118,9 +136,9 @@ function renderActiveSpace() {
         space.items.forEach((item, index) => {
             const itemSvg = getItemSvg(item.type);
             grid.innerHTML += `
-                <div class="bg-[#242427] border border-[#3f3f46] rounded-2xl p-4 flex items-center justify-between group hover:border-blue-500/50 hover:bg-[#2a2a2e] transition cursor-pointer relative" onclick="openItemDetailModal('${space.id}', ${index})">
+                <div class="bg-[#242427] border border-[#3f3f46] rounded-lg p-4 flex items-center justify-between group hover:border-blue-500/50 hover:bg-[#2a2a2e] transition cursor-pointer relative" onclick="openItemDetailModal('${space.id}', ${index})">
                     <div class="flex items-center gap-3 overflow-hidden">
-                        <div class="w-10 h-10 rounded-xl bg-[#18181b] border border-[#3f3f46] flex items-center justify-center flex-shrink-0 text-gray-400 group-hover:text-blue-400 group-hover:border-blue-500/30 transition">
+                        <div class="w-10 h-10 rounded-lg bg-[#18181b] border border-[#3f3f46] flex items-center justify-center flex-shrink-0 text-gray-400 group-hover:text-blue-400 group-hover:border-blue-500/30 transition">
                             ${itemSvg}
                         </div>
                         <div class="flex flex-col overflow-hidden">
@@ -139,7 +157,7 @@ function renderActiveSpace() {
     }
 
     grid.innerHTML += `
-        <button onclick="openAddItemModal('${space.id}')" class="border-2 border-dashed border-[#3f3f46] rounded-2xl p-4 flex items-center justify-center gap-2 text-blue-500 hover:bg-blue-500/10 transition group h-[74px]">
+        <button onclick="openAddItemModal('${space.id}')" class="border-2 border-dashed border-[#3f3f46] rounded-lg p-4 flex items-center justify-center gap-2 text-blue-500 hover:bg-blue-500/10 transition group h-[74px]">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
             <span class="text-sm font-bold">Add Item</span>
         </button>
@@ -154,9 +172,7 @@ window.switchWorkspace = function(id) {
 }
 
 window.deleteWorkspace = function(id) {
-    // Basic confirm for workspace deletion
     if(!confirm("Delete entire workspace and all its items?")) return;
-
     window.workspaces = window.workspaces.filter(s => s.id !== id);
     if (window.activeWorkspaceId === id) {
         window.activeWorkspaceId = window.workspaces.length > 0 ? window.workspaces[0].id : null;
@@ -169,7 +185,10 @@ window.deleteWorkspace = function(id) {
 window.createNewSpace = function() {
     window.editingSpaceId = null;
     document.getElementById('space-name-input').value = "";
-    document.getElementById('space-desc-input').value = "";
+    document.getElementById('space-folder-input').value = "";
+    document.getElementById('space-xampp-input').value = "";
+    document.getElementById('space-cmd-input').value = "";
+    document.getElementById('space-url-input').value = "";
     
     const defaultColor = document.querySelector('input[name="space_color"][value="text-blue-400"]');
     if (defaultColor) defaultColor.checked = true;
@@ -193,8 +212,11 @@ window.editWorkspace = function(id) {
     if (!space) return;
 
     window.editingSpaceId = id; 
-    document.getElementById('space-name-input').value = space.name;
-    document.getElementById('space-desc-input').value = space.description || '';
+    document.getElementById('space-name-input').value = space.name || '';
+    document.getElementById('space-folder-input').value = space.folderPath || '';
+    document.getElementById('space-xampp-input').value = space.xamppPath || '';
+    document.getElementById('space-cmd-input').value = space.terminalCmd || '';
+    document.getElementById('space-url-input').value = space.liveUrl || '';
 
     const colorRadio = document.querySelector(`input[name="space_color"][value="${space.color}"]`);
     if(colorRadio) colorRadio.checked = true;
@@ -225,7 +247,11 @@ window.closeSpaceModal = function() {
 
 window.submitNewSpace = function() {
     const name = document.getElementById('space-name-input').value.trim();
-    const desc = document.getElementById('space-desc-input').value.trim();
+    const folderPath = document.getElementById('space-folder-input').value.trim();
+    const xamppPath = document.getElementById('space-xampp-input').value.trim();
+    const terminalCmd = document.getElementById('space-cmd-input').value.trim();
+    const liveUrl = document.getElementById('space-url-input').value.trim();
+
     const colorInput = document.querySelector('input[name="space_color"]:checked');
     const iconInput = document.querySelector('input[name="space_icon"]:checked');
     
@@ -249,7 +275,10 @@ window.submitNewSpace = function() {
         const spaceIndex = window.workspaces.findIndex(s => s.id === window.editingSpaceId);
         if (spaceIndex !== -1) {
             window.workspaces[spaceIndex].name = name;
-            window.workspaces[spaceIndex].description = desc;
+            window.workspaces[spaceIndex].folderPath = folderPath;
+            window.workspaces[spaceIndex].xamppPath = xamppPath;
+            window.workspaces[spaceIndex].terminalCmd = terminalCmd;
+            window.workspaces[spaceIndex].liveUrl = liveUrl;
             window.workspaces[spaceIndex].color = color;
             window.workspaces[spaceIndex].iconType = iconType;
             window.workspaces[spaceIndex].icon = iconSvg;
@@ -259,7 +288,10 @@ window.submitNewSpace = function() {
         const newSpace = {
             id: 'space_' + Date.now(),
             name: name,
-            description: desc,
+            folderPath: folderPath,
+            xamppPath: xamppPath,
+            terminalCmd: terminalCmd,
+            liveUrl: liveUrl,
             color: color,
             iconType: iconType,
             icon: iconSvg,
@@ -273,6 +305,26 @@ window.submitNewSpace = function() {
     window.saveWorkspaces();
     window.closeSpaceModal();
     window.renderSpacesApp();
+}
+
+/**
+ * Triggers the comprehensive 1-click launch mechanism in the main process.
+ * Parses the workspace profile and relays automation instructions.
+ */
+window.launchFullWorkspace = function(id) {
+    const space = window.workspaces.find(s => s.id === id);
+    if (!space) return;
+
+    if (window.showToast) {
+        window.showToast(`Firing up ${space.name}...`, "success");
+    }
+
+    try {
+        const { ipcRenderer } = require('electron');
+        ipcRenderer.send('launch-workspace', space);
+    } catch(e) {
+        console.error("IPC Launch Trigger Failed. Not running in Electron?", e);
+    }
 }
 
 // ITEM CRUD LOGIC & DETAIL VIEW
@@ -325,11 +377,9 @@ window.submitNewItem = function() {
         if (!window.workspaces[spaceIndex].items) window.workspaces[spaceIndex].items = [];
         
         if (window.isEditingItem && window.activeItemIndex !== null) {
-            // Update mode
             window.workspaces[spaceIndex].items[window.activeItemIndex] = { title: name, type: type, url: target };
             if(window.showToast) window.showToast("Item updated successfully!", "success");
         } else {
-            // Create mode
             window.workspaces[spaceIndex].items.push({ title: name, type: type, url: target });
             if(window.showToast) window.showToast("Item added successfully!", "success");
         }
@@ -338,14 +388,12 @@ window.submitNewItem = function() {
         window.closeAddItemModal();
         window.renderSpacesApp();
         
-        // If editing from detail view, update detail view too
         if (window.isEditingItem && !document.getElementById('modal-item-detail').classList.contains('opacity-0')) {
             window.openItemDetailModal(window.activeItemSpaceId, window.activeItemIndex);
         }
     }
 }
 
-/** Opens the rich detail view modal for a clicked item */
 window.openItemDetailModal = function(spaceId, itemIndex) {
     const space = window.workspaces.find(s => s.id === spaceId);
     if (!space || !space.items || !space.items[itemIndex]) return;
@@ -374,7 +422,6 @@ window.closeItemDetailModal = function() {
     }
 }
 
-/** Prepares the Add modal to be used as an Edit modal */
 window.triggerItemEdit = function() {
     const space = window.workspaces.find(s => s.id === window.activeItemSpaceId);
     if (!space) return;
@@ -402,14 +449,12 @@ window.triggerItemEdit = function() {
     }, 100);
 }
 
-/** Triggers native launch behavior (Electron integration required for full effect) */
 window.launchCurrentItem = function() {
     const space = window.workspaces.find(s => s.id === window.activeItemSpaceId);
     const item = space.items[window.activeItemIndex];
     
     if (window.showToast) window.showToast(`Launching ${item.title}...`, "success");
     
-    // Check if running inside Electron, then launch the URL/App
     try {
         const { shell } = require('electron');
         if (item.url.startsWith('http')) {
@@ -422,18 +467,13 @@ window.launchCurrentItem = function() {
     }
 }
 
-// SAFE DELETION (CONFIRMATION MODAL)
-
-/** Called from hover button on grid card */
 window.triggerDirectItemDelete = function(spaceId, itemIndex) {
     window.activeItemSpaceId = spaceId;
     window.activeItemIndex = itemIndex;
     openConfirmDeleteModal();
 }
 
-/** Called from the red button inside the Detail View Modal */
 window.triggerItemDelete = function() {
-    // context is already set when opening detail view
     openConfirmDeleteModal();
 }
 
@@ -461,7 +501,7 @@ window.executeItemDeletion = function() {
         window.renderSpacesApp();
         
         closeConfirmDeleteModal();
-        closeItemDetailModal(); // Close detail view if it was open
+        closeItemDetailModal(); 
         
         if(window.showToast) window.showToast("Item permanently deleted.", "success");
     }

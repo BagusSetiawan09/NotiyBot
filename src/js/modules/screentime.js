@@ -1,10 +1,14 @@
 /**
- * @fileoverview Screen Time Tracker (Aggregated Mode)
- * Captures active OS window data, aggregates durations, and renders the timeline UI.
+ * @fileoverview Screen Time Tracker & Analytics Engine
+ * Captures active OS window data, handles focus blocking, and renders optimized UI.
  */
 
 window.liveTrackingData = JSON.parse(localStorage.getItem('notiybot_screentime_today')) || [];
 window.lastPollTime = Date.now(); 
+
+// Optimization variables to prevent UI flickering (kedut-kedut)
+window.lastUiRenderTime = Date.now();
+window.lastAppCount = window.liveTrackingData.length;
 
 // Helper: Determine UI properties based on application name
 function getAppUI(appName) {
@@ -36,6 +40,7 @@ function formatTimeAMPM(timestamp) {
 
 // Helper: Format milliseconds to human-readable duration
 function formatDuration(ms) {
+    if (ms === 0) return "0m";
     if (ms < 60000) return "< 1m"; 
     const totalMinutes = Math.floor(ms / 60000);
     const h = Math.floor(totalMinutes / 60);
@@ -44,37 +49,81 @@ function formatDuration(ms) {
     return `${m}m`;
 }
 
-// IPC Listener: Handle incoming OS window data and aggregate screen time
+// Helper: Retrieves accurate historical data merged with today's live data
+function getWeeklyData() {
+    let history = JSON.parse(localStorage.getItem('notiybot_screentime_history')) || {};
+    let liveTotalMs = window.liveTrackingData.reduce((acc, curr) => acc + curr.durationMs, 0);
+
+    let weekMs = [0, 0, 0, 0, 0, 0, 0];
+    let now = new Date();
+    
+    let dayOfWeek = now.getDay() || 7; 
+    let monday = new Date(now);
+    monday.setDate(now.getDate() - dayOfWeek + 1);
+    monday.setHours(0,0,0,0);
+
+    let totalWeeklyMs = 0;
+
+    for (let i = 0; i < 7; i++) {
+        let currentDay = new Date(monday);
+        currentDay.setDate(monday.getDate() + i);
+        let dateString = currentDay.toISOString().split('T')[0];
+
+        if (currentDay.toDateString() === now.toDateString()) {
+            weekMs[i] = liveTotalMs;
+        } else {
+            weekMs[i] = history[dateString] || 0; 
+        }
+        totalWeeklyMs += weekMs[i];
+    }
+    return { weekMs, totalWeeklyMs, dayOfWeek: dayOfWeek - 1 };
+}
+
+// IPC Listener: Handle incoming OS window data
 require('electron').ipcRenderer.on('os-window-update', (event, data) => {
     const appName = data.owner.name || "Unknown App";
     const windowTitle = data.title || "";
     const now = Date.now();
     
-    // Calculate elapsed time since last poll
+    // Focus Blocker Engine
+    if (window.pomoIsRunning === true && window.pomoMode === 'focus') {
+        const blacklistKeywords = ['youtube', 'instagram', 'tiktok', 'netflix', 'twitter', 'facebook', 'pinterest'];
+        const titleLower = windowTitle.toLowerCase();
+        const isDistracted = blacklistKeywords.some(keyword => titleLower.includes(keyword));
+
+        if (isDistracted) {
+            require('electron').ipcRenderer.send('notify-system', "Warning! Focus session is active. Please close " + appName + ".");
+        }
+    }
+
     const deltaMs = now - window.lastPollTime;
     window.lastPollTime = now;
 
-    // Reset tracking data if a new day has started
+    // Day Rollover and Historical Data Storage Logic
     if (window.liveTrackingData.length > 0) {
         const firstEntryTime = new Date(window.liveTrackingData[0].startTime);
         const today = new Date();
+        
         if (firstEntryTime.getDate() !== today.getDate() || firstEntryTime.getMonth() !== today.getMonth()) {
+            let history = JSON.parse(localStorage.getItem('notiybot_screentime_history')) || {};
+            let oldDateStr = firstEntryTime.toISOString().split('T')[0];
+            let oldTotal = window.liveTrackingData.reduce((acc, item) => acc + item.durationMs, 0);
+            
+            history[oldDateStr] = oldTotal;
+            localStorage.setItem('notiybot_screentime_history', JSON.stringify(history));
+            
             window.liveTrackingData = []; 
         }
     }
 
-    // Aggregation Logic: Check if the application exists in today's tracking data
+    // Aggregation Logic
     let existingApp = window.liveTrackingData.find(item => item.title === appName);
 
     if (existingApp) {
-        // Existing application: Add elapsed time to duration and update subtitle
-        // Cap maximum added time to 10 seconds to prevent tracking spikes after sleep/hibernation
         const addedTime = deltaMs > 10000 ? 3000 : deltaMs; 
-        
         existingApp.durationMs += addedTime;
         existingApp.subtitle = windowTitle; 
     } else {
-        // New application: Create a new timeline entry
         const ui = getAppUI(appName);
         window.liveTrackingData.push({
             startTime: now,
@@ -88,44 +137,91 @@ require('electron').ipcRenderer.on('os-window-update', (event, data) => {
         });
     }
 
-    // Ensure data is sorted by start time
     window.liveTrackingData.sort((a, b) => a.startTime - b.startTime);
-
-    // Persist tracking data to local storage
     localStorage.setItem('notiybot_screentime_today', JSON.stringify(window.liveTrackingData));
 
-    // Re-render UI if the screen time tab is currently active
-    const stContainer = document.getElementById('screentime-timeline-container');
-    if (stContainer && stContainer.offsetParent !== null) { 
-        window.renderScreenTime();
+    // Update Global Snapshot and Top Total Text (Real-time without flickering DOM)
+    if (typeof window.updateDailySnapshot === 'function') {
+        window.updateDailySnapshot();
+    }
+    
+    const totalTimeText = document.getElementById('st-total-text');
+    const isWeekView = document.getElementById('st-tab-week')?.classList.contains('bg-blue-600');
+    
+    if (totalTimeText) {
+        if (isWeekView) {
+            const weekData = getWeeklyData();
+            totalTimeText.innerText = formatDuration(weekData.totalWeeklyMs);
+        } else {
+            const totalMsToday = window.liveTrackingData.reduce((acc, item) => acc + item.durationMs, 0);
+            totalTimeText.innerText = formatDuration(totalMsToday);
+        }
+    }
+
+    // Throttled UI Re-render (Only recreate complex DOM if new app is opened OR 60 seconds have passed)
+    const currentAppCount = window.liveTrackingData.length;
+    const timeSinceLastRender = now - window.lastUiRenderTime;
+
+    if (currentAppCount !== window.lastAppCount || timeSinceLastRender >= 60000) {
+        const stContainer = document.getElementById('screentime-timeline-container');
+        const weekContainer = document.getElementById('screentime-week-container');
+        
+        if (stContainer && !stContainer.classList.contains('hidden')) window.renderScreenTime();
+        if (weekContainer && !weekContainer.classList.contains('hidden')) window.renderWeeklyChart();
+        
+        window.lastUiRenderTime = now;
+        window.lastAppCount = currentAppCount;
     }
 });
 
-// 🟢 NEW FUNCTION: Wipes all tracking data
+// Wipes all daily tracking data
 window.clearScreenTime = function() {
     window.liveTrackingData = [];
     localStorage.setItem('notiybot_screentime_today', JSON.stringify([]));
     window.renderScreenTime();
     if(window.showToast) window.showToast("Activity history cleared!", "success");
+    if (typeof window.updateDailySnapshot === 'function') window.updateDailySnapshot();
 }
 
-// UI Renderer functions
+// UI Renderer functions for Tab Switching
 window.switchScreenTimeTab = function(tab) {
     const btnDay = document.getElementById('st-tab-day');
     const btnWeek = document.getElementById('st-tab-week');
+    const containerDay = document.getElementById('screentime-timeline-container');
+    const containerWeek = document.getElementById('screentime-week-container');
+    const sectionTitle = document.getElementById('st-section-title');
+    const btnClear = document.getElementById('btn-clear-st');
+    const subtitleText = document.getElementById('st-subtitle-text');
     
     if (tab === 'day') {
         btnDay.className = "px-4 py-1.5 text-sm font-bold rounded-lg bg-blue-600 text-white shadow-sm transition-all duration-300";
         btnWeek.className = "px-4 py-1.5 text-sm font-bold rounded-lg text-gray-400 hover:text-white transition-all duration-300";
+        containerDay.classList.remove('hidden');
+        containerDay.classList.add('flex');
+        containerWeek.classList.add('hidden');
+        containerWeek.classList.remove('flex');
+        sectionTitle.innerText = "Today Activity";
+        subtitleText.innerText = "screen time today";
+        btnClear.style.display = 'flex';
+        window.renderScreenTime();
     } else {
         btnWeek.className = "px-4 py-1.5 text-sm font-bold rounded-lg bg-blue-600 text-white shadow-sm transition-all duration-300";
         btnDay.className = "px-4 py-1.5 text-sm font-bold rounded-lg text-gray-400 hover:text-white transition-all duration-300";
+        containerDay.classList.add('hidden');
+        containerDay.classList.remove('flex');
+        containerWeek.classList.remove('hidden');
+        containerWeek.classList.add('flex');
+        sectionTitle.innerText = "Weekly Real-time Insights";
+        subtitleText.innerText = "total screen time this week";
+        btnClear.style.display = 'none'; 
+        window.renderWeeklyChart();
     }
 }
 
+// Renders the Day View (Timeline)
 window.renderScreenTime = function() {
     const container = document.getElementById('screentime-timeline-container');
-    const totalTimeText = document.querySelector('h2.text-5xl'); 
+    const totalTimeText = document.getElementById('st-total-text'); 
     if (!container) return;
 
     container.innerHTML = "";
@@ -152,7 +248,6 @@ window.renderScreenTime = function() {
         if (safeSubtitle.length > 40) safeSubtitle = safeSubtitle.substring(0, 40) + "...";
         let subtitleHtml = safeSubtitle ? `<p class="text-[11px] text-gray-500 font-medium mt-0.5 truncate max-w-[200px]" title="${item.subtitle}">${safeSubtitle}</p>` : '';
 
-        // Dynamic vertical line styling
         let lineStyle = "top-0 bottom-0"; 
         if (index === 0 && window.liveTrackingData.length === 1) lineStyle = "hidden"; 
         else if (index === 0) lineStyle = "top-6 bottom-0"; 
@@ -175,7 +270,7 @@ window.renderScreenTime = function() {
                             ${item.iconSvg}
                         </div>
                         <div class="flex flex-col justify-center min-w-0">
-                            <h4 class="text-sm font-bold text-gray-200 tracking-wide truncate">${item.title}</h4>
+                            <h4 class="text-sm font-medium text-gray-200 tracking-wide truncate">${item.title}</h4>
                             ${subtitleHtml}
                         </div>
                     </div>
@@ -193,9 +288,99 @@ window.renderScreenTime = function() {
     }
 }
 
+// Renders the Week View (Ultra-Minimalist Real-time SVG Line Chart)
+window.renderWeeklyChart = function() {
+    const container = document.getElementById('screentime-week-container');
+    const totalTimeText = document.getElementById('st-total-text');
+    if (!container) return;
+
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    
+    const data = getWeeklyData();
+    const currentDayIndex = data.dayOfWeek;
+
+    const MAX_VAL = Math.max(...data.weekMs, 60 * 60 * 1000); 
+    const yPercentages = data.weekMs.map(ms => (ms / MAX_VAL) * 100);
+
+    const points = [];
+    yPercentages.forEach((percent, i) => {
+        const x = (i * 100) / 6; 
+        const y = 100 - percent; 
+        points.push({ x, y, percent, originalMs: data.weekMs[i] });
+    });
+
+    const pathData = `M ${points.map(p => `${p.x},${p.y}`).join(' L ')}`;
+    const areaData = `${pathData} L 100,100 L 0,100 Z`;
+
+    let htmlDots = '';
+    points.forEach((p, i) => {
+        const isToday = i === currentDayIndex;
+        const dotClasses = isToday 
+            ? "w-2.5 h-2.5 bg-[#18181b] border-2 border-blue-400 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.8)] z-20 cursor-pointer" 
+            : "w-2 h-2 bg-[#18181b] border-[1.5px] border-gray-600 rounded-full z-10 hover:border-blue-400 hover:scale-125 transition-transform cursor-pointer";
+        
+        const tooltipText = formatDuration(p.originalMs);
+        
+        htmlDots += `
+            <div class="absolute group flex justify-center items-center" style="left: ${p.x}%; top: ${p.y}%; transform: translate(-50%, -50%);">
+                <div class="${dotClasses}"></div>
+                <div class="absolute -top-7 bg-[#27272a] text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-30">
+                    ${tooltipText}
+                </div>
+            </div>
+        `;
+    });
+
+    let labelsHtml = '<div class="flex justify-between w-full mt-4 px-1">';
+    days.forEach((day, index) => {
+        const isToday = index === currentDayIndex;
+        const textColor = isToday ? 'text-blue-400 font-bold' : 'text-gray-500 font-medium';
+        labelsHtml += `<span class="text-[10px] uppercase tracking-wider ${textColor} w-8 text-center">${day}</span>`;
+    });
+    labelsHtml += '</div>';
+
+    const chartHtml = `
+        <div class="w-full flex-1 flex flex-col justify-end relative mt-2 px-3">
+            
+            <div class="relative w-full h-[180px]">
+                <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="w-full h-full absolute inset-0 overflow-visible z-0">
+                    <defs>
+                        <linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.2" />
+                            <stop offset="100%" stop-color="#3b82f6" stop-opacity="0" />
+                        </linearGradient>
+                    </defs>
+                    
+                    <line x1="0" y1="0" x2="100" y2="0" stroke="#3f3f46" stroke-width="1" vector-effect="non-scaling-stroke" stroke-dasharray="4 4" opacity="0.3" />
+                    <line x1="0" y1="50" x2="100" y2="50" stroke="#3f3f46" stroke-width="1" vector-effect="non-scaling-stroke" stroke-dasharray="4 4" opacity="0.3" />
+                    <line x1="0" y1="100" x2="100" y2="100" stroke="#3f3f46" stroke-width="1" vector-effect="non-scaling-stroke" opacity="0.8" />
+                    
+                    <path d="${areaData}" fill="url(#lineGradient)" />
+                    <path d="${pathData}" fill="none" stroke="#3b82f6" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linejoin="round" />
+                </svg>
+
+                ${htmlDots}
+            </div>
+            
+            ${labelsHtml}
+        </div>
+    `;
+
+    container.innerHTML = chartHtml;
+
+    if (totalTimeText) {
+        totalTimeText.innerText = formatDuration(data.totalWeeklyMs);
+    }
+}
+
 // Ensure rendering executes cleanly on tab activation
 window.addEventListener('tabSwitched', function(e) {
     if (e.detail === 'screentime') {
-        setTimeout(window.renderScreenTime, 100); 
+        const btnDay = document.getElementById('st-tab-day');
+        if(btnDay && btnDay.classList.contains('bg-blue-600')) {
+            setTimeout(window.renderScreenTime, 50); 
+        } else {
+            setTimeout(window.renderWeeklyChart, 50);
+        }
     }
 });

@@ -7,7 +7,7 @@ window.tasks = JSON.parse(localStorage.getItem('notiybot_tasks')) || [];
 window.tempFileName = "";
 window.tempFilePath = "";
 
-// 🟢 FOCUS TIMER GLOBALS
+// FOCUS TIMER GLOBALS
 window.focusInterval = null;
 window.focusDefaultMinutes = 25;
 window.focusTotalSeconds = window.focusDefaultMinutes * 60;
@@ -115,7 +115,7 @@ window.renderTasks = function() {
         : window.tasks.map((t, i) => ({...t, originalIndex: i})).filter(t => !t.completed && t.category === window.activeTodoTab);
 
     if (filteredTasks.length === 0) {
-        let emptyMsg = window.activeTodoTab === 'history' ? "Belum ada riwayat." : `Belum ada ${window.activeTodoTab}.`;
+        let emptyMsg = window.activeTodoTab === 'history' ? "No history yet." : `There isn't any yet ${window.activeTodoTab}.`;
         container.innerHTML = `<div class="text-center py-10 bg-[#242427] border border-dashed border-[#3f3f46] rounded-xl flex flex-col items-center justify-center text-gray-500"><p class="text-sm font-medium">${emptyMsg}</p></div>`;
         return;
     }
@@ -130,7 +130,7 @@ window.renderTasks = function() {
             ? `<button onclick="toggleTask(${index}); event.stopPropagation();" title="Kembalikan" class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 hover:bg-blue-500 hover:text-white transition mt-0.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg></button>`
             : `<button onclick="toggleTask(${index}); event.stopPropagation();" title="Selesaikan" class="flex-shrink-0 w-6 h-6 rounded-full border-2 border-[#52525b] hover:border-blue-400 transition hover:bg-blue-500/20 flex items-center justify-center mt-0.5"></button>`;
 
-        // 🟢 UPDATE: Tombol Start Focus ditambahkan di Task
+        // UPDATE: Tombol Start Focus ditambahkan di Task
         let focusBtn = (!isDone && task.category === 'task') 
             ? `<button onclick="startFocusMode(${index}); event.stopPropagation();" class="text-blue-400 hover:text-white hover:bg-blue-500 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-widest transition border border-blue-500/30 group-hover:border-blue-500/70 shadow-sm"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"></path></svg> FOCUS</button>`
             : '';
@@ -166,7 +166,7 @@ window.renderTasks = function() {
     });
 }
 
-// 🟢 FOCUS TIMER LOGIC START
+// FOCUS TIMER LOGIC START
 window.startFocusMode = function(index) {
     window.currentFocusTaskIndex = index;
     const task = window.tasks[index];
@@ -190,7 +190,7 @@ window.setCustomFocusTime = function() {
         window.focusTotalSeconds = mins * 60;
         window.focusSecondsLeft = mins * 60;
         window.updateFocusUI();
-        if(window.showToast) window.showToast(`Timer diset ke ${mins} Menit`, "success");
+        if(window.showToast) window.showToast(`Timer is set to ${mins} Minute`, "success");
     }
 }
 
@@ -213,7 +213,7 @@ window.toggleFocusTimer = function() {
                 clearInterval(window.focusInterval);
                 window.isFocusRunning = false;
                 window.updateFocusUI();
-                if(window.showToast) window.showToast("Waktu Fokus Habis! Istirahat dulu Bos!", "success");
+                if(window.showToast) window.showToast("Focus time is up! Take a break, boss!", "success");
                 // Optional: Play a sound here
             }
         }, 1000);
@@ -231,7 +231,7 @@ window.stopFocusTimer = function() {
 // Tambahan fungsi Skip
 window.skipFocusTimer = function() {
     window.stopFocusTimer();
-    if(window.showToast) window.showToast("Sesi fokus di-skip!", "warning");
+    if(window.showToast) window.showToast("Focus session skipped!", "warning");
 }
 
 window.updateFocusUI = function() {
@@ -262,7 +262,7 @@ window.updateFocusUI = function() {
         pauseIcon.classList.add('hidden');
     }
 }
-// 🟢 FOCUS TIMER LOGIC END
+// FOCUS TIMER LOGIC END
 
 
 window.addTask = function() {
@@ -271,12 +271,12 @@ window.addTask = function() {
         window.tasks.push({ text: input.value.trim(), completed: false, category: 'todo' });
         localStorage.setItem('notiybot_tasks', JSON.stringify(window.tasks));
         input.value = ""; window.renderTasks();
-    } else if(window.showToast) window.showToast("Tugas tidak boleh kosong!", "error");
+    } else if(window.showToast) window.showToast("Task cannot be empty!", "error");
 }
 
 window.submitTask = function() {
     const title = document.getElementById('task-title').value.trim();
-    if (title === "") { if(window.showToast) window.showToast("Judul Task wajib diisi!", "error"); return; }
+    if (title === "") { if(window.showToast) window.showToast("Task title is required!", "error"); return; }
     window.tasks.push({ 
         text: title, description: document.getElementById('task-desc').value.trim(),
         priority: document.getElementById('task-priority').value,
@@ -287,7 +287,7 @@ window.submitTask = function() {
     });
     localStorage.setItem('notiybot_tasks', JSON.stringify(window.tasks));
     window.toggleTaskForm(false); window.renderTasks();
-    if(window.showToast) window.showToast("Task berhasil disimpan!", "success");
+    if(window.showToast) window.showToast("Task successfully saved!", "success");
 }
 
 window.toggleTask = function(index) {
@@ -306,7 +306,7 @@ window.openTaskDetail = function(index) {
     // Sisa fungsi sama seperti sebelumnya
     const task = window.tasks[index];
     document.getElementById('detail-title').innerText = task.text;
-    document.getElementById('detail-desc').innerHTML = task.description || "Tidak ada deskripsi tambahan.";
+    document.getElementById('detail-desc').innerHTML = task.description || "No additional description.";
     document.getElementById('modal-task-detail').classList.remove('opacity-0', 'pointer-events-none');
     document.getElementById('task-detail-content').classList.remove('scale-95');
 }
